@@ -23,14 +23,14 @@ const ResultsPage: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{
     column: string;
     direction: string;
-  }>({ column: "draw_date", direction: "DescNullsLast" });
+  }>({ column: "created_at", direction: "DescNullsLast" });
   const [pageSize, setPageSize] = useState<number>(10);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedResult] = useState<
     ResultsQueryData["draw_resultsCollection"]["edges"][number]["node"] | null
   >(null);
   const [sortVariable, setSortVariable] = useState<Record<string, string>[]>([
-    { id: "DescNullsFirst" },
+    { created_at: "DescNullsFirst" },
   ]);
   const [selectedDrawTypeFilter, setSelectedDrawTypeFilter] = useState<
     string[]
@@ -150,6 +150,15 @@ const ResultsPage: React.FC = () => {
             className="relative px-4 py-3 cursor-pointer"
           >
             Draw Type
+            {sortConfig.column === "draw_type" ? (
+              sortConfig.direction === "AscNullsFirst" ? (
+                <ChevronUp className="absolute right-20 top-4 w-4 h-4" />
+              ) : (
+                <ChevronDown className="absolute right-20 top-4 w-4 h-4" />
+              )
+            ) : (
+              <ChevronsUpDown className="absolute right-20 top-4 w-4 h-4" />
+            )}
           </th>
           <th
             scope="col"
@@ -157,6 +166,15 @@ const ResultsPage: React.FC = () => {
             className="relative px-4 py-3 cursor-pointer"
           >
             Combination
+            {sortConfig.column === "combination" ? (
+              sortConfig.direction === "AscNullsFirst" ? (
+                <ChevronUp className="absolute right-20 top-4 w-4 h-4" />
+              ) : (
+                <ChevronDown className="absolute right-20 top-4 w-4 h-4" />
+              )
+            ) : (
+              <ChevronsUpDown className="absolute right-20 top-4 w-4 h-4" />
+            )}
           </th>
           <th scope="col" className="px-4 py-3 text-right">
             Actions
@@ -244,7 +262,6 @@ const ResultsPage: React.FC = () => {
           setPageSize={setPageSize}
           bulkAction={false}
           onDeleteSelected={() => {}}
-          bulkAction={false}
         />
         {viewModalOpen && (
           <ViewResultModal

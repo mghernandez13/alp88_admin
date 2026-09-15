@@ -8,7 +8,8 @@ import { GET_LOTTO_TYPES } from "../../graphql/queries/lotto";
 import { GET_BET_TYPES } from "../../graphql/queries/betTypes";
 import { useSearchParams } from "react-router-dom";
 import { Eye } from "lucide-react";
-import { formatTo12h } from "../../utils/helper";
+import Swal from "sweetalert2";
+import { formatDateTime12h, formatTo12h } from "../../utils/helper";
 import { supabase } from "../../db/supabase";
 import type {
   Bets,
@@ -37,6 +38,7 @@ const DummyBetsPage: React.FC = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedBet, setSelectedBet] = useState<Bets | null>(null);
   const [allBets, setAllBets] = useState<Bets[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<TableError | null>(null);
   const [agentOptions, setAgentOptions] = useState<AgentOption[]>([]);
@@ -87,6 +89,7 @@ const DummyBetsPage: React.FC = () => {
       .select(
         `
           id,
+          created_by,
           lotto_types!inner(id, name, draw_time, game_type),
           bet_types(id, draw_time, name, code),
           profiles:agent_id(full_name),
@@ -100,6 +103,7 @@ const DummyBetsPage: React.FC = () => {
           created_at,
           is_dummy_bet
         `,
+        { count: "exact" },
       )
       .eq("is_archive", false)
       .eq("is_dummy_bet", true)
@@ -119,13 +123,68 @@ const DummyBetsPage: React.FC = () => {
         .lte("created_at", `${dateRange.end}T23:59:59.999`);
     }
 
-    const { data, error: listError } = await query;
+    const trimmedSearchQuery = searchQuery.trim();
+    if (trimmedSearchQuery) {
+      const escapedSearchQuery = trimmedSearchQuery
+        .replace(/[%_]/g, "\\$&")
+        .replace(/[(),]/g, "");
+      const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        trimmedSearchQuery,
+      );
+
+      const searchFilter = looksLikeUuid
+        ? `id.eq.${trimmedSearchQuery},combination.ilike.%${escapedSearchQuery}%,bettor_name.ilike.%${escapedSearchQuery}%`
+        : `combination.ilike.%${escapedSearchQuery}%,bettor_name.ilike.%${escapedSearchQuery}%`;
+
+      const { data: matchingAgents } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("full_name", `%${escapedSearchQuery}%`);
+      const matchingAgentIds = (matchingAgents ?? []).map((agent) => agent.id);
+
+      query = query.or(
+        matchingAgentIds.length > 0
+          ? `${searchFilter},agent_id.in.(${matchingAgentIds.join(",")})`
+          : searchFilter,
+      );
+    }
+
+    const {
+      data,
+      count,
+      error: listError,
+    } = await query.range(offset, offset + pageSize - 1);
 
     if (listError) {
       setAllBets([]);
+      setTotalCount(0);
       setError({ name: "SupabaseError", message: listError.message });
       setLoading(false);
       return;
+    }
+
+    const creatorIds = [
+      ...new Set((data ?? []).map((row) => row?.created_by).filter(Boolean)),
+    ] as string[];
+
+    let creatorProfiles: Record<string, string> = {};
+
+    if (creatorIds.length > 0) {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", creatorIds);
+
+      if (!profilesError) {
+        creatorProfiles = Object.fromEntries(
+          (
+            (profilesData ?? []) as Array<{
+              id: string;
+              full_name: string | null;
+            }>
+          ).map((profile) => [profile.id, profile.full_name || "-"]),
+        );
+      }
     }
 
     const rows = ((data ?? []) as BetSupabaseRow[]).map((row) => ({
@@ -145,6 +204,12 @@ const DummyBetsPage: React.FC = () => {
       profiles: normalizeRelation(row.profiles) ?? {
         full_name: "-",
       },
+      created_by: row.created_by ?? "",
+      created_by_profile: {
+        full_name: row.created_by
+          ? (creatorProfiles[row.created_by] ?? "-")
+          : "-",
+      },
       bet_amount: row.bet_amount,
       combination: row.combination,
       hit: row.hit,
@@ -158,7 +223,16 @@ const DummyBetsPage: React.FC = () => {
 
     setAllBets(rows);
     setLoading(false);
-  }, [dateRange.end, dateRange.start, selectedBetTypes, selectedLottoTypes]);
+    setTotalCount(count ?? 0);
+  }, [
+    dateRange.end,
+    dateRange.start,
+    offset,
+    pageSize,
+    searchQuery,
+    selectedBetTypes,
+    selectedLottoTypes,
+  ]);
 
   const formatHierarchy = useCallback((profiles: AgentHierarchyRow[]) => {
     const superAdmin = profiles.find(
@@ -228,37 +302,7 @@ const DummyBetsPage: React.FC = () => {
     void fetchBets();
   }, [fetchBets]);
 
-  const filteredBets = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return allBets;
-
-    return allBets.filter((bet) => {
-      const drawTimeFormatted = bet.lotto_types?.draw_time
-        ? formatTo12h(bet.lotto_types.draw_time)
-        : "";
-
-      const searchableFields = [
-        bet.profiles?.full_name ?? "",
-        bet.id,
-        bet.lotto_types?.name ?? "",
-        bet.lotto_types?.draw_time ?? "",
-        drawTimeFormatted,
-        String(bet.bet_amount ?? ""),
-        formatCurrency(bet.bet_amount ?? 0),
-        bet.combination ?? "",
-        bet.bettor_name ?? "",
-      ];
-
-      return searchableFields.some((field) =>
-        field.toLowerCase().includes(query),
-      );
-    });
-  }, [allBets, searchQuery]);
-
-  const paginatedBets = useMemo(
-    () => filteredBets.slice(offset, offset + pageSize),
-    [filteredBets, offset, pageSize],
-  );
+  const paginatedBets = allBets;
 
   const lottoTypeOptions =
     lottoTypesData &&
@@ -348,8 +392,13 @@ const DummyBetsPage: React.FC = () => {
       return {
         details: (
           <div>
-            <div>Added By: {item.profiles.full_name}</div>
-            <div>On: {item.created_at}</div>
+            <div>
+              Added By:{" "}
+              {item.created_by_profile?.full_name ||
+                item.profiles?.full_name ||
+                "-"}
+            </div>
+            <div>On: {formatDateTime12h(item.created_at)}</div>
             <div>RefID: {item.id}</div>
             <div>Bettor Name: {item.bettor_name}</div>
           </div>
@@ -399,8 +448,51 @@ const DummyBetsPage: React.FC = () => {
     });
   }, [paginatedBets]);
 
-  const totalCount = filteredBets.length;
-  const hasNextPage = offset + paginatedBets.length < filteredBets.length;
+  const hasNextPage = offset + paginatedBets.length < totalCount;
+
+  const handleOnDeleteSelected = useCallback(
+    (selectedIndexes: number[], resetSelectedRows: () => void) => {
+      const selectedIds = selectedIndexes
+        .map((index) => paginatedBets[index]?.id)
+        .filter(Boolean) as string[];
+
+      if (selectedIds.length === 0) return;
+
+      Swal.fire({
+        icon: "warning",
+        title: "Delete Selected Dummy Bets",
+        text: `Are you sure you want to delete ${selectedIds.length} dummy bet(s)?`,
+        showCancelButton: true,
+        reverseButtons: true,
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const { error: deleteError } = await supabase
+              .from("bets")
+              .update({ is_archive: true })
+              .in("id", selectedIds);
+
+            if (deleteError) throw deleteError;
+
+            Swal.fire({
+              icon: "success",
+              title: "Delete Dummy Bets",
+              text: `${selectedIds.length} dummy bet(s) successfully deleted!`,
+            });
+            resetSelectedRows();
+            void fetchBets();
+          } catch (e) {
+            Swal.fire({
+              icon: "error",
+              title: "Delete Dummy Bets",
+              text: `Error occurred while trying to delete dummy bets: ${e}`,
+            });
+          }
+        }
+      });
+    },
+    [paginatedBets, fetchBets],
+  );
 
   return (
     <AdminTemplate>
@@ -441,7 +533,9 @@ const DummyBetsPage: React.FC = () => {
           hasNextPage={hasNextPage}
           pageSize={pageSize}
           setPageSize={setPageSize}
-          bulkAction={false}
+          bulkAction={true}
+          bulkActionPlacement="toolbar"
+          onDeleteSelected={handleOnDeleteSelected}
         />
         <ViewBetModal
           open={viewModalOpen}

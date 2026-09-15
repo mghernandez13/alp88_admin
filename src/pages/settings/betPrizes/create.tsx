@@ -79,7 +79,12 @@ const CreateBetPrizePage: React.FC = () => {
       return;
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value, betTypeId: "" }));
+    if (name === "lottoTypeId") {
+      setFormData((prev) => ({ ...prev, lottoTypeId: value, betTypeId: "" }));
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

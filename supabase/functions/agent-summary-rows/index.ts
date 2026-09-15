@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const BATCH_SIZE = 1000;
-const SUPER_ADMIN_EMAIL = "superadmin@tresglobal.online";
+const SUPER_ADMIN_EMAIL = "superadmin@alp88.online";
 
 type RequestBody = {
   date?: string;
@@ -179,7 +179,9 @@ const aggregateBets = (bets: BetRow[]): AggregatedBetsResponse => {
         result.lp3.freeAmount += betAmount;
       }
 
-      result.remittances.lp3.amount += remittanceAmount;
+      if (betCode !== "rb") {
+        result.remittances.lp3.amount += remittanceAmount;
+      }
     } else if (gameType === "2D") {
       if (drawTime === "14:00:00") {
         if (betCode === "s") result.twoD["2PM"].sbets += 1;
@@ -217,10 +219,8 @@ const aggregateBets = (bets: BetRow[]): AggregatedBetsResponse => {
     }
   }
 
-  result.lp3.netBets =
-    result.lp3.normalBets + result.lp3.returnedBets + result.lp3.freeBets;
-  result.lp3.netAmount =
-    result.lp3.normalAmount + result.lp3.returnedAmount + result.lp3.freeAmount;
+  result.lp3.netBets = result.lp3.normalBets + result.lp3.freeBets;
+  result.lp3.netAmount = result.lp3.normalAmount + result.lp3.freeAmount;
 
   result.twoD.net.sbets =
     result.twoD["2PM"].sbets +
@@ -326,22 +326,40 @@ Deno.serve(async (req: Request) => {
     const userEmail = user.email?.toLowerCase() ?? "";
     const isSuperAdminUser = userEmail === SUPER_ADMIN_EMAIL;
 
-    const profilesQuery = supabase
+    const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select(
         "id, first_name, last_name, full_name, email, permission_id, avatar_url, is_quota_based, remittance_percent, upline, status",
       )
       .eq("is_archive", false);
 
-    const { data: profiles, error: profilesError } = isSuperAdminUser
-      ? await profilesQuery
-      : await profilesQuery.or(`upline.eq.${userId},id.eq.${userId}`);
-
     if (profilesError) {
       throw profilesError;
     }
 
-    const agents = (profiles ?? []) as ProfileRow[];
+    const allProfiles = (profiles ?? []) as ProfileRow[];
+    const agents = isSuperAdminUser
+      ? allProfiles
+      : (() => {
+          const descendants = new Set<string>([userId]);
+          let hasNewItems = true;
+
+          // Collect the full descendant tree from the logged-in user.
+          while (hasNewItems) {
+            hasNewItems = false;
+
+            for (const profile of allProfiles) {
+              if (!profile.upline || descendants.has(profile.id)) continue;
+
+              if (descendants.has(profile.upline)) {
+                descendants.add(profile.id);
+                hasNewItems = true;
+              }
+            }
+          }
+
+          return allProfiles.filter((profile) => descendants.has(profile.id));
+        })();
 
     if (agents.length === 0) {
       return new Response(JSON.stringify([]), {
@@ -420,19 +438,35 @@ Deno.serve(async (req: Request) => {
       ];
     }
 
-    const getAdminsForHeadAdmin = (headAdminId: string) => {
-      return agents.filter((agent) => agent.upline === headAdminId);
+    const getAllDescendantsForHeadAdmin = (headAdminId: string) => {
+      const children = agents.filter((agent) => agent.upline === headAdminId);
+      const descendants: ProfileRow[] = [];
+      const queue = [...children];
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (!current) continue;
+
+        descendants.push(current);
+        const nextLevelChildren = agents.filter(
+          (agent) => agent.upline === current.id,
+        );
+
+        queue.push(...nextLevelChildren);
+      }
+
+      return descendants;
     };
 
     const rows = headAdmins.flatMap<AgentSummaryRow>((headAdmin) => {
       const headAdminStats = aggregateBets(betsByAgent[headAdmin.id] ?? []);
+      const descendants = getAllDescendantsForHeadAdmin(headAdmin.id);
 
       if (headAdmin.id === userId) {
         return [{ type: "headAdmin", headAdmin, stats: headAdminStats }];
       }
 
-      const admins = getAdminsForHeadAdmin(headAdmin.id);
-      const adminRows: AgentSummaryRow[] = admins.map((admin) => {
+      const adminRows: AgentSummaryRow[] = descendants.map((admin) => {
         const adminStats = aggregateBets(betsByAgent[admin.id] ?? []);
 
         return { type: "admin", admin, stats: adminStats };

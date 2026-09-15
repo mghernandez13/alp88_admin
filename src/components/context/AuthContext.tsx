@@ -53,8 +53,13 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
       }
 
       const userStatus = Boolean(session?.user?.user_metadata.status);
+      const userIsArchive = Boolean(session?.user?.user_metadata.is_archive);
       const userPermissions = session?.user?.user_metadata.permissions;
-      if (!userPermissions?.includes("Can Login to Admin") || !userStatus) {
+      if (
+        !userPermissions?.includes("Can Login to Admin") ||
+        !userStatus ||
+        userIsArchive
+      ) {
         setSession(null);
       } else if (session) {
         const expired = await checkSessionExpiry(session);
@@ -89,8 +94,9 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
       if (error) {
         throw error.message;
       }
-
-      const userStatus = Boolean(data.user?.user_metadata.status);
+      const userStatus =
+        Boolean(data.user?.user_metadata.status) &&
+        !data.user?.user_metadata.is_archive;
       const userPermissions = data?.user?.user_metadata.permissions;
 
       if (!userPermissions?.includes("Can Login to Admin") || !userStatus) {

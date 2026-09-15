@@ -279,7 +279,6 @@ const AgentForm: React.FC<AgentFormProps> = (props) => {
             value={formData.lastName}
             onChange={handleFormChange}
             placeholder="Enter last name"
-            required
           />
         </div>
 

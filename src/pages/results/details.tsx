@@ -20,12 +20,16 @@ import LoadingScreen from "../../components/LoadingScreen";
 import { CREATE_DRAW_RESULTS_LOG } from "../../graphql/queries/resultsLogs";
 import { UserAuth } from "../../components/context/AuthContext";
 import EditWinningCombinationModal from "../../components/modals/results/EditWinningCombinationModal";
+import WinnerImagePreviewModal from "../../components/modals/results/WinnerImagePreviewModal.tsx";
+import type { WinnerImageAsset } from "../../utils/winners";
 
 const ResultsDetailsPage: React.FC = () => {
   const { resultId } = useParams<{ resultId: string }>();
   const [isLoading, setIsLoading] = useState(false);
   const { session } = UserAuth();
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [winnerPreviewAsset, setWinnerPreviewAsset] = useState<WinnerImageAsset | null>(null);
+  const [winnerPreviewTitle, setWinnerPreviewTitle] = useState("");
   const userId = session?.user?.id;
 
   // Use useLazyQuery for manual triggering
@@ -75,6 +79,21 @@ const ResultsDetailsPage: React.FC = () => {
   const totalResultBets = betsData?.betsCollection?.totalCount ?? 0;
   const jackpotWinners = jackpotData?.betsCollection?.totalCount ?? 0;
   const rbWinners = rbData?.betsCollection?.totalCount ?? 0;
+
+  const handleWinnerImagePreview = useCallback(
+    (asset: WinnerImageAsset, title: string) => {
+      winnerPreviewAsset?.revoke();
+      setWinnerPreviewAsset(asset);
+      setWinnerPreviewTitle(title);
+    },
+    [winnerPreviewAsset],
+  );
+
+  const closeWinnerPreview = useCallback(() => {
+    winnerPreviewAsset?.revoke();
+    setWinnerPreviewAsset(null);
+    setWinnerPreviewTitle("");
+  }, [winnerPreviewAsset]);
 
   const handleInvokeProcessBets = useCallback(
     async (newCombination?: string) => {
@@ -302,6 +321,7 @@ const ResultsDetailsPage: React.FC = () => {
               userId={userId}
               setEditModalOpen={setEditModalOpen}
               handleProcessBets={handleProcessBets}
+              onWinnerImagePreview={handleWinnerImagePreview}
             />
           </div>
 
@@ -394,6 +414,14 @@ const ResultsDetailsPage: React.FC = () => {
         minNumber={resultNode?.lotto_types?.min_number}
         maxNumber={resultNode?.lotto_types?.max_number}
         onSuccess={handleProcessBets}
+      />
+      <WinnerImagePreviewModal
+        isOpen={Boolean(winnerPreviewAsset)}
+        title={winnerPreviewTitle}
+        imageUrl={winnerPreviewAsset?.imageUrl ?? ""}
+        fileName={winnerPreviewAsset?.fileName ?? ""}
+        onClose={closeWinnerPreview}
+        onDownload={() => winnerPreviewAsset?.download()}
       />
     </AdminTemplate>
   );

@@ -109,6 +109,8 @@ Deno.serve(async (req: Request) => {
       .from("bet_types")
       .select("id, code")
       .eq("game_type", "LP3")
+      .eq("is_active", true)
+      .eq("is_archive", false)
       .in("code", ["RB", "FB"]);
 
     if (betTypesError) {
@@ -132,7 +134,6 @@ Deno.serve(async (req: Request) => {
     let freeBetWinners = 0;
     let rbWinners = 0;
     let totalJackpotAmount = 0;
-    let totalRemittance = 0;
 
     while (true) {
       const { data: bets, error: betsError } = await supabase
@@ -143,6 +144,7 @@ Deno.serve(async (req: Request) => {
         .eq("lotto_type_id", lottoTypeId)
         .eq("bet_status", "completed")
         .eq("is_dummy_bet", false)
+        .eq("is_archive", false)
         .gte("created_at", `${date}T00:00:00`)
         .lte("created_at", `${date}T23:59:59.999`)
         .range(offset, offset + BATCH_SIZE - 1);
@@ -196,12 +198,12 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        if (
-          bet.remittance_amount &&
-          typeof bet.remittance_amount === "number"
-        ) {
-          totalRemittance += bet.remittance_amount;
-        }
+        // if (
+        //   bet.remittance_amount &&
+        //   typeof bet.remittance_amount === "number"
+        // ) {
+        //   totalRemittance += bet.remittance_amount;
+        // }
       }
 
       if (bets.length < BATCH_SIZE) {
@@ -211,6 +213,7 @@ Deno.serve(async (req: Request) => {
       offset += BATCH_SIZE;
     }
 
+    const totalRemittance = totalNetSales * 0.6; //Always 60% of the net sales
     const jackpotWinners = normalBetWinners + freeBetWinners;
 
     return new Response(

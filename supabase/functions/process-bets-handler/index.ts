@@ -27,6 +27,27 @@ Deno.serve(async (req) => {
     },
   );
 
+  const normalizeBetNumber = (value: string) =>
+    value.trim().replace(/^0+(?=\d)/, "");
+
+  const splitAndNormalizeNumbers = (combinationValue: string) =>
+    combinationValue.split("-").map(normalizeBetNumber);
+
+  const isTrioCombinationWithoutZeroPrefix = (combinationValue: string) => {
+    const parts = combinationValue.split("-").map((part) => part.trim());
+
+    if (parts.length !== 3) {
+      return false;
+    }
+
+    // Reject values like 01 so trio detection does not rely on zero-prefixed inputs.
+    if (parts.some((part) => /^0\d+$/.test(part))) {
+      return false;
+    }
+
+    return parts[0] === parts[1] && parts[1] === parts[2];
+  };
+
   const checkIfRambolitoWinner = (
     betNumbers: string[],
     resultNumbers: string[],
@@ -144,7 +165,7 @@ Deno.serve(async (req) => {
 
         // Process bets for super_jackpot, return_bet, and classic match
 
-        const resultNumbers = combination.split("-").map((s) => s.trim());
+        const resultNumbers = splitAndNormalizeNumbers(combination);
         const processedResults = [];
         if (allBets && Array.isArray(allBets)) {
           for (const bet of allBets) {
@@ -183,7 +204,7 @@ Deno.serve(async (req) => {
             }
 
             let prizeAmount = 0;
-            const betNumbers = bet.combination.split("-").map((s) => s.trim());
+            const betNumbers = splitAndNormalizeNumbers(bet.combination);
 
             if (gameType === "LP3") {
               const firstThree = resultNumbers.slice(0, 3);
@@ -192,19 +213,26 @@ Deno.serve(async (req) => {
                 betNumbers[0] === firstThree[0] &&
                 betNumbers[1] === firstThree[1] &&
                 betNumbers[2] === firstThree[2] &&
-                betTypeCode?.toLowerCase() !== "fb" &&
-                betTypeCode?.toLowerCase() !== "rb";
+                !betTypeCode;
 
               const matchCount = betNumbers.filter((num) =>
-                firstThree.includes(num),
+                resultNumbers.includes(num),
               ).length;
+
+              console.log(
+                "matchCount",
+                matchCount,
+                "betNumbers",
+                betNumbers,
+                "firstThree",
+                firstThree,
+              );
 
               const isReturnBet =
                 !isSuperJackpot &&
                 matchCount === 2 &&
                 bet.bet_amount >= 50 &&
-                betTypeCode?.toLowerCase() !== "fb" &&
-                betTypeCode?.toLowerCase() !== "rb";
+                !betTypeCode;
 
               if (isSuperJackpot || isReturnBet) {
                 if (isSuperJackpot && betPrizeData) {
@@ -269,8 +297,8 @@ Deno.serve(async (req) => {
 
                 const isTrioWinner =
                   betNumbers.length === resultNumbers.length &&
-                  betNumbers[0] === betNumbers[1] &&
-                  betNumbers[1] === betNumbers[2] &&
+                  isTrioCombinationWithoutZeroPrefix(bet.combination) &&
+                  isTrioCombinationWithoutZeroPrefix(combination) &&
                   [...betNumbers].sort().join("-") ===
                     [...resultNumbers].sort().join("-");
 
@@ -333,8 +361,8 @@ Deno.serve(async (req) => {
               } else if (betTypeCode?.toLowerCase() === "t") {
                 const isTrioWinner =
                   betNumbers.length === resultNumbers.length &&
-                  betNumbers[0] === betNumbers[1] &&
-                  betNumbers[1] === betNumbers[2] &&
+                  isTrioCombinationWithoutZeroPrefix(bet.combination) &&
+                  isTrioCombinationWithoutZeroPrefix(combination) &&
                   [...betNumbers].sort().join("-") ===
                     [...resultNumbers].sort().join("-");
                 if (isTrioWinner) {

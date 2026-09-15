@@ -11,7 +11,12 @@ import type { SummaryProps } from "../../types/generic";
 import Swal from "sweetalert2";
 import { generateExcelFile } from "../../utils/excel";
 import Loading from "../generic/icons/Loading";
-import { downloadWinnersImage, fetchWinnerRows } from "../../utils/winners";
+import {
+  createWinnerImageAsset,
+  fetchWinnerRows,
+  type WinnerImageAsset,
+} from "../../utils/winners";
+import WinnerImagePreviewModal from "../modals/results/WinnerImagePreviewModal.tsx";
 
 type SummaryResponse = {
   totalBets: number;
@@ -38,8 +43,15 @@ const INITIAL_SUMMARY: SummaryResponse = {
 const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
   const [statsLoading, setStatsLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
-  const [downloadWinnersLoading, setDownloadWinnersLoading] = useState(false);
+  const [downloadJackpotWinnersLoading, setDownloadJackpotWinnersLoading] =
+    useState(false);
+  const [downloadRbWinnersLoading, setDownloadRbWinnersLoading] =
+    useState(false);
   const [summary, setSummary] = useState<SummaryResponse>(INITIAL_SUMMARY);
+  const [previewAsset, setPreviewAsset] = useState<WinnerImageAsset | null>(
+    null,
+  );
+  const [previewTitle, setPreviewTitle] = useState("");
 
   const day = getDayNameFromDateString(selectedDate);
 
@@ -119,8 +131,18 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
     }
   };
 
-  const handleDownloadWinners = async () => {
-    setDownloadWinnersLoading(true);
+  const closePreview = () => {
+    previewAsset?.revoke();
+    setPreviewAsset(null);
+    setPreviewTitle("");
+  };
+
+  const handlePreviewWinners = async (isReturnBet: boolean) => {
+    if (isReturnBet) {
+      setDownloadRbWinnersLoading(true);
+    } else {
+      setDownloadJackpotWinnersLoading(true);
+    }
 
     try {
       const lottoTypeId =
@@ -138,25 +160,37 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
       const winners = await fetchWinnerRows({
         lottoTypeId,
         selectedDate,
+        isReturnBet,
       });
 
       if (winners.length === 0) {
         await Swal.fire({
           icon: "info",
-          title: "No LP3 Winners Found",
-          text: `No LP3 winning bets found for ${selectedDate}.`,
+          title: isReturnBet
+            ? "No LP3 RB Winners Found"
+            : "No LP3 Jackpot Winners Found",
+          text: isReturnBet
+            ? `No LP3 RB winning bets found for ${selectedDate}.`
+            : `No LP3 jackpot winning bets found for ${selectedDate}.`,
         });
         return;
       }
 
-      await downloadWinnersImage({
-        rows: winners,
+      const asset = await createWinnerImageAsset({
+        rows: isReturnBet
+          ? winners.map((winner) => ({ ...winner, remarks: "RETURN BET" }))
+          : winners,
         selectedDate,
         drawName: selectedLottoType?.name ?? "LP3",
         winningCombination: summary.winningCombination || "-",
         logoImageSrc: selectedLottoType?.logo_image,
-        fileNamePrefix: "lp3_winners",
+        fileNamePrefix: isReturnBet ? "lp3_rb_winners" : "lp3_winners",
       });
+
+      setPreviewAsset(asset);
+      setPreviewTitle(
+        isReturnBet ? "LP3 RB Winners Preview" : "LP3 Winners Preview",
+      );
     } catch (error) {
       const message =
         error instanceof Error
@@ -169,7 +203,11 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
         text: message,
       });
     } finally {
-      setDownloadWinnersLoading(false);
+      if (isReturnBet) {
+        setDownloadRbWinnersLoading(false);
+      } else {
+        setDownloadJackpotWinnersLoading(false);
+      }
     }
   };
 
@@ -263,19 +301,54 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
       {/* Action buttons */}
       <div className="flex flex-wrap gap-4 justify-center mb-4">
         <PrimaryButton
-          disabled={downloadLoading || downloadWinnersLoading}
+          disabled={
+            downloadLoading ||
+            downloadJackpotWinnersLoading ||
+            downloadRbWinnersLoading
+          }
           onClick={handleDownloadBets}
         >
           {downloadLoading ? <Loading /> : "Download Bets"}
         </PrimaryButton>
         <PrimaryButton
-          disabled={downloadLoading || downloadWinnersLoading}
-          onClick={handleDownloadWinners}
+          disabled={
+            downloadLoading ||
+            downloadJackpotWinnersLoading ||
+            downloadRbWinnersLoading
+          }
+          onClick={() => {
+            void handlePreviewWinners(false);
+          }}
         >
-          {downloadWinnersLoading ? <Loading /> : "Download LP3 Winners"}
+          {downloadJackpotWinnersLoading ? (
+            <Loading />
+          ) : (
+            "Download Jackpot Winners"
+          )}
+        </PrimaryButton>
+        <PrimaryButton
+          disabled={
+            downloadLoading ||
+            downloadJackpotWinnersLoading ||
+            downloadRbWinnersLoading
+          }
+          onClick={() => {
+            void handlePreviewWinners(true);
+          }}
+        >
+          {downloadRbWinnersLoading ? <Loading /> : "Download RB Winners"}
         </PrimaryButton>
         <TertiaryButton onClick={onReload}>Reload</TertiaryButton>
       </div>
+
+      <WinnerImagePreviewModal
+        isOpen={Boolean(previewAsset)}
+        title={previewTitle}
+        imageUrl={previewAsset?.imageUrl ?? ""}
+        fileName={previewAsset?.fileName ?? ""}
+        onClose={closePreview}
+        onDownload={() => previewAsset?.download()}
+      />
 
       {/* Summary cards grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-2">

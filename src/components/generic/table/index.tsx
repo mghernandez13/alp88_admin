@@ -21,6 +21,7 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
     setPageSize,
     onDeleteSelected,
     bulkAction = true,
+    bulkActionPlacement = "column",
   } = props;
 
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -79,6 +80,9 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
         setSearchParams={setSearchParams}
         pageSize={pageSize}
         setPageSize={setPageSize}
+        selectedCount={selectedRows.size}
+        onDeleteSelectedClick={handleDeleteSelected}
+        bulkActionPlacement={bulkActionPlacement}
       />
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -97,25 +101,29 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
                       onChange={(e) => handleSelectAll(e.target.checked)}
                       className=" accent-yellow-500 bg-[#16191d] border-gray-600 w-4 h-4 cursor-pointer"
                     />
-                    <button
-                      onClick={toggleMenu}
-                      className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded bg-transparent"
-                      aria-label="More options"
-                    >
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                    {menuOpen && (
-                      <div
-                        ref={menuRef}
-                        className="absolute left-0 mt-8 w-40 bg-[#222222] border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10"
-                      >
+                    {bulkActionPlacement === "column" && (
+                      <>
                         <button
-                          onClick={handleDeleteSelected}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 bg-black text-white"
+                          onClick={toggleMenu}
+                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded bg-transparent"
+                          aria-label="More options"
                         >
-                          Delete selected
+                          <ChevronDown className="w-4 h-4" />
                         </button>
-                      </div>
+                        {menuOpen && (
+                          <div
+                            ref={menuRef}
+                            className="absolute left-0 mt-8 w-40 bg-[#222222] border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10"
+                          >
+                            <button
+                              onClick={handleDeleteSelected}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 bg-black text-white"
+                            >
+                              Delete selected
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </th>

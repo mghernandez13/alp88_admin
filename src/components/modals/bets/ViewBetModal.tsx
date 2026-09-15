@@ -2,7 +2,7 @@ import React from "react";
 import { X } from "lucide-react";
 import Label from "../../generic/Label";
 import Input from "../../generic/Input";
-import { formatTo12h } from "../../../utils/helper";
+import { formatDateTime12h, formatTo12h } from "../../../utils/helper";
 import type { Bets } from "../../../types/api";
 import { formatCurrency } from "../../../utils/currency";
 
@@ -111,9 +111,28 @@ const ViewBetModal: React.FC<ViewBetModalProps> = ({ open, onClose, bet }) => {
               />
             </div>
             <div className="flex flex-col gap-2 w-full md:w-1/2">
-              <Label>Created At</Label>
-              <Input type="text" disabled value={bet.created_at} />
+              <Label>Added By</Label>
+              <Input
+                type="text"
+                disabled
+                value={
+                  bet.created_by_profile?.full_name ||
+                  bet.profiles?.full_name ||
+                  "-"
+                }
+              />
             </div>
+          </div>
+          <div className="flex w-full gap-5">
+            <div className="flex flex-col gap-2 w-full md:w-1/2">
+              <Label>Created At</Label>
+              <Input
+                type="text"
+                disabled
+                value={formatDateTime12h(bet.created_at) || "-"}
+              />
+            </div>
+            <div className="flex flex-col gap-2 w-full md:w-1/2" />
           </div>
         </div>
       </div>

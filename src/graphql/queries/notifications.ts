@@ -7,6 +7,8 @@ export const GET_NOTIFICATIONS = gql`
     $searchTerm: String
     $sortOrder: [notificationsOrderBy!]
     $receiverId: UUID
+    $startDate: timestamptz
+    $endDate: timestamptz
   ) {
     notificationsCollection(
       first: $first
@@ -22,6 +24,12 @@ export const GET_NOTIFICATIONS = gql`
             ]
           }
           { or: [{ receiver: { is: NULL } }, { receiver: { eq: $receiverId } }] }
+          {
+            created_at: { gte: $startDate }
+          }
+          {
+            created_at: { lte: $endDate }
+          }
         ]
       }
     ) {

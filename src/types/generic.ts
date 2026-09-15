@@ -51,6 +51,13 @@ export interface TableRecordProps {
   pageSize: number;
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
   bulkAction?: boolean;
+  /**
+   * Where the bulk-delete trigger is rendered: "column" (default) keeps the
+   * existing chevron menu inside the checkbox column header; "toolbar"
+   * renders a dropdown in the TableHeader toolbar instead, visible only
+   * once rows are selected.
+   */
+  bulkActionPlacement?: "column" | "toolbar";
 
   /**
    * Called when the user chooses "Delete selected" from the header menu.
@@ -80,6 +87,11 @@ export interface TableHeaderProps {
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
   /** optional list of page size options to show in dropdown */
   pageSizeOptions?: number[];
+  /** number of currently selected table rows, used to show the toolbar bulk-delete dropdown */
+  selectedCount?: number;
+  /** invoked when the toolbar "Delete selected" menu item is clicked */
+  onDeleteSelectedClick?: () => void;
+  bulkActionPlacement?: "column" | "toolbar";
 }
 
 export interface UserRoleCountQuery {

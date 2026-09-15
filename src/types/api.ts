@@ -268,6 +268,7 @@ export interface GetRoleQueryVariables {
 
 export interface Bets {
   id: string;
+  created_by?: string | null;
   lotto_types: {
     id: string;
     name: string;
@@ -283,6 +284,9 @@ export interface Bets {
   bet_amount: number;
   combination: string;
   profiles: {
+    full_name: string;
+  };
+  created_by_profile?: {
     full_name: string;
   };
   is_dummy_bet: boolean;
@@ -344,6 +348,8 @@ export interface NotificationsQueryVariables {
   searchTerm: string;
   receiverId?: string;
   sortOrder?: Record<string, string>[];
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface UpdateBetPrizeMutation {

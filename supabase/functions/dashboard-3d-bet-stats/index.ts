@@ -99,6 +99,21 @@ const toManilaDateString = (createdAt: string) => {
   }).format(date);
 };
 
+const isTrioCombinationWithoutZeroPrefix = (combinationValue: string) => {
+  const parts = combinationValue.split("-").map((part) => part.trim());
+
+  if (parts.length !== 3) {
+    return false;
+  }
+
+  // Reject values like 01 so trio detection does not rely on zero-prefixed inputs.
+  if (parts.some((part) => /^0\d+$/.test(part))) {
+    return false;
+  }
+
+  return parts[0] === parts[1] && parts[1] === parts[2];
+};
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -203,7 +218,7 @@ Deno.serve(async (req: Request) => {
       const { data: bets, error: betsError } = await supabase
         .from("bets")
         .select(
-          "lotto_type_id, bet_type_id, hit, prize_amount, bet_amount, is_super_jackpot, created_at",
+          "lotto_type_id, bet_type_id, hit, prize_amount, bet_amount, combination, is_super_jackpot, created_at",
         )
         .in("lotto_type_id", lottoTypeIds)
         .eq("bet_status", "completed")
@@ -250,30 +265,44 @@ Deno.serve(async (req: Request) => {
           lottoStats.dailyNetSale[betDate] += bet.bet_amount;
         }
 
-        if (sTypeId != null && String(betTypeId) === String(sTypeId)) {
+        if (
+          (tTypeId != null && String(betTypeId) === String(tTypeId)) ||
+          (String(betTypeId) === String(sTypeId) &&
+            isTrioCombinationWithoutZeroPrefix(bet.combination))
+        ) {
+          summaryStats.totalTrioBets += 1;
+          lottoStats.totalTrioBets += 1;
+        } else if (sTypeId != null && String(betTypeId) === String(sTypeId)) {
           summaryStats.totalStraightBets += 1;
           lottoStats.totalStraightBets += 1;
         } else if (rTypeId != null && String(betTypeId) === String(rTypeId)) {
           summaryStats.totalRambolitoBets += 1;
           lottoStats.totalRambolitoBets += 1;
-        } else if (tTypeId != null && String(betTypeId) === String(tTypeId)) {
-          summaryStats.totalTrioBets += 1;
-          lottoStats.totalTrioBets += 1;
         }
 
         if (bet.hit) {
           summaryStats.totalWinners += 1;
           lottoStats.totalWinners += 1;
 
-          if (sTypeId != null && String(betTypeId) === String(sTypeId)) {
-            summaryStats.dailyStraightWinners[betDate] += 1;
-            lottoStats.dailyStraightWinners[betDate] += 1;
+          const isTrioWinnerFromStraight =
+            sTypeId != null &&
+            String(betTypeId) === String(sTypeId) &&
+            typeof bet.combination === "string" &&
+            isTrioCombinationWithoutZeroPrefix(bet.combination);
+
+          const isTrioWinner =
+            (sTypeId != null && String(betTypeId) === String(sTypeId)) ||
+            isTrioWinnerFromStraight;
+
+          if (isTrioWinner) {
+            summaryStats.dailyTrioWinners[betDate] += 1;
+            lottoStats.dailyTrioWinners[betDate] += 1;
           } else if (rTypeId != null && String(betTypeId) === String(rTypeId)) {
             summaryStats.dailyRambolitoWinners[betDate] += 1;
             lottoStats.dailyRambolitoWinners[betDate] += 1;
-          } else if (tTypeId != null && String(betTypeId) === String(tTypeId)) {
-            summaryStats.dailyTrioWinners[betDate] += 1;
-            lottoStats.dailyTrioWinners[betDate] += 1;
+          } else if (sTypeId != null && String(betTypeId) === String(sTypeId)) {
+            summaryStats.dailyStraightWinners[betDate] += 1;
+            lottoStats.dailyStraightWinners[betDate] += 1;
           }
 
           if (typeof bet.prize_amount === "number") {

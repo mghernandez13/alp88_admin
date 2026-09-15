@@ -4,8 +4,13 @@ import Swal from "sweetalert2";
 import { supabase } from "../../db/supabase";
 import { useMutation } from "@apollo/client/react";
 import { CREATE_DRAW_RESULTS_LOG } from "../../graphql/queries/resultsLogs";
-import { downloadWinnersImage, type WinnerImageRow } from "../../utils/winners";
-import { isRambolito3 } from "../../utils/bets";
+import {
+  createWinnerImageAsset,
+  getTwoDSpecialWinnerContext,
+  mapWinnerRows,
+  type WinnerImageAsset,
+  type WinnerBetRow,
+} from "../../utils/winners";
 
 interface UserActionsDropdownProps {
   isLoading: boolean;
@@ -18,24 +23,12 @@ interface UserActionsDropdownProps {
   userId: string | undefined;
   setEditModalOpen: (open: boolean) => void;
   handleProcessBets: (newCombination?: string) => void;
+  onWinnerImagePreview: (asset: WinnerImageAsset, title: string) => void;
 }
 
-type Bet = {
+type Bet = WinnerBetRow & {
   id: number;
-  combination: string;
-  bettor_name: string;
-  bet_amount: number;
-  prize_amount?: number;
   created_at: string;
-  is_super_jackpot?: boolean;
-  is_return_bet?: boolean;
-  profiles?: {
-    full_name?: string;
-  };
-  bet_types?: {
-    name?: string;
-    code?: string;
-  };
 };
 
 const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
@@ -49,12 +42,13 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
   userId,
   setEditModalOpen,
   handleProcessBets,
+  onWinnerImagePreview,
 }) => {
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
   const [createResultLog] = useMutation(CREATE_DRAW_RESULTS_LOG);
   const [lottoTypeName, setLottoTypeName] = useState(() => "lotto_type");
-
+  const [lottoTypeGameType, setLottoTypeGameType] = useState("");
   const getFileNamePart = useCallback((value: string) => {
     return value
       .trim()
@@ -69,12 +63,13 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
     const fetchLottoTypeName = async () => {
       const { data, error } = await supabase
         .from("lotto_types")
-        .select("name")
+        .select("name, game_type")
         .eq("id", lottoTypeId)
         .maybeSingle();
 
       if (!error && data?.name) {
         setLottoTypeName(data.name);
+        setLottoTypeGameType(data.game_type || "");
       }
     };
 
@@ -97,37 +92,6 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
     };
   }, [actionsOpen]);
 
-  const mapToWinnerRows = useCallback(
-    (bets: Bet[], remarksGetter?: (bet: Bet) => string): WinnerImageRow[] => {
-      return bets.map((bet) => {
-        const betAmount = Number(bet.bet_amount ?? 0);
-        const betTypeCode = (bet.bet_types?.code ?? "").toUpperCase();
-        const combinationArr = bet.combination.split("-").map(Number);
-        const isTrio =
-          combinationArr.length === 3 &&
-          combinationArr[0] === combinationArr[1] &&
-          combinationArr[1] === combinationArr[2];
-        return {
-          admin: bet.profiles?.full_name || "-",
-          bettorName: bet.bettor_name || "-",
-          bet: `${bet.combination || "-"}=${betAmount}${betTypeCode}`,
-          remarks:
-            remarksGetter?.(bet) ||
-            (bet.bet_types?.name === "Rambolito"
-              ? isRambolito3(combinationArr)
-                ? "Rambolito 3"
-                : "Rambolito 6"
-              : (isTrio ? "Trio" : (bet.bet_types?.name ?? "")) ||
-                bet.bet_types?.code ||
-                "-"
-            ).toUpperCase(),
-          prize: Number(bet.prize_amount ?? 0),
-        };
-      });
-    },
-    [],
-  );
-
   const handleDownloadJackpot = useCallback(async () => {
     if (!lottoTypeId || !resultDrawDate) return;
     setIsLoading(true);
@@ -143,11 +107,13 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
       const { data: bets, error } = await supabase
         .from("bets")
         .select(
-          `id, combination, bettor_name, bet_amount, prize_amount, created_at, profiles:agent_id(full_name), bet_types(name, code)`,
+          `id, combination, bettor_name, bet_amount, prize_amount, created_at, is_super_jackpot, is_return_bet, profiles:agent_id(full_name), bet_types(name, code)`,
         )
         .eq("lotto_type_id", lottoTypeId)
         .eq("hit", true)
         .eq("is_dummy_bet", false)
+        .eq("is_archive", false)
+        .eq("bet_status", "completed")
         .eq("is_return_bet", false)
         .gte("created_at", resultDrawDate + "T00:00:00")
         .lte("created_at", resultDrawDate + "T23:59:59.999")
@@ -169,14 +135,24 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
         return;
       }
 
-      await downloadWinnersImage({
-        rows: mapToWinnerRows(bets as Bet[]),
+      const twoDSpecialContext =
+        lottoTypeGameType.toUpperCase() === "2D" && winningCombination
+          ? await getTwoDSpecialWinnerContext(
+              resultDrawDate,
+              winningCombination,
+            )
+          : null;
+
+      const asset = await createWinnerImageAsset({
+        rows: mapWinnerRows(bets as Bet[], { twoDSpecialContext }),
         selectedDate: resultDrawDate,
         drawName: lottoTypeName,
         winningCombination: winningCombination || "-",
         logoImageSrc,
         fileNamePrefix: `${getFileNamePart(lottoTypeName)}_jackpot_winners`,
       });
+
+      onWinnerImagePreview(asset, "Jackpot Winners Preview");
 
       await createResultLog({
         variables: {
@@ -198,9 +174,10 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
     userId,
     lottoTypeName,
     getFileNamePart,
-    mapToWinnerRows,
+    lottoTypeGameType,
     winningCombination,
     logoImageSrc,
+    onWinnerImagePreview,
   ]);
 
   const handleDownloadRB = useCallback(async () => {
@@ -218,11 +195,13 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
       const { data: bets, error } = await supabase
         .from("bets")
         .select(
-          `id, combination, bettor_name, bet_amount, prize_amount, created_at, profiles:agent_id(full_name), bet_types(name, code)`,
+          `id, combination, bettor_name, bet_amount, prize_amount, created_at, is_super_jackpot, is_return_bet, profiles:agent_id(full_name), bet_types(name, code)`,
         )
         .eq("lotto_type_id", lottoTypeId)
         .eq("hit", true)
         .eq("is_dummy_bet", false)
+        .eq("is_archive", false)
+        .eq("bet_status", "completed")
         .eq("is_return_bet", true)
         .gte("created_at", resultDrawDate + "T00:00:00")
         .lte("created_at", resultDrawDate + "T23:59:59.999")
@@ -244,14 +223,27 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
         return;
       }
 
-      await downloadWinnersImage({
-        rows: mapToWinnerRows(bets as Bet[], () => "RETURN BET"),
+      const twoDSpecialContext =
+        lottoTypeGameType.toUpperCase() === "2D" && winningCombination
+          ? await getTwoDSpecialWinnerContext(
+              resultDrawDate,
+              winningCombination,
+            )
+          : null;
+
+      const asset = await createWinnerImageAsset({
+        rows: mapWinnerRows(bets as Bet[], {
+          remarksGetter: () => "RETURN BET",
+          twoDSpecialContext,
+        }),
         selectedDate: resultDrawDate,
         drawName: lottoTypeName,
         winningCombination: winningCombination || "-",
         logoImageSrc,
         fileNamePrefix: `${getFileNamePart(lottoTypeName)}_rb_winners`,
       });
+
+      onWinnerImagePreview(asset, "RB Winners Preview");
 
       await createResultLog({
         variables: {
@@ -273,9 +265,10 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
     userId,
     lottoTypeName,
     getFileNamePart,
-    mapToWinnerRows,
+    lottoTypeGameType,
     winningCombination,
     logoImageSrc,
+    onWinnerImagePreview,
   ]);
 
   const handleDownloadAllResults = useCallback(async () => {
@@ -298,6 +291,8 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
         .eq("lotto_type_id", lottoTypeId)
         .eq("hit", true)
         .eq("is_dummy_bet", false)
+        .eq("is_archive", false)
+        .eq("bet_status", "completed")
         .gte("created_at", resultDrawDate + "T00:00:00")
         .lte("created_at", resultDrawDate + "T23:59:59.999")
         .limit(10000);
@@ -318,20 +313,32 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
         return;
       }
 
-      await downloadWinnersImage({
-        rows: mapToWinnerRows(bets as Bet[], (bet) =>
-          bet.is_super_jackpot
-            ? "SUPER JACKPOT"
-            : bet.is_return_bet
-              ? "RETURN BET"
-              : "JACKPOT",
-        ),
+      const twoDSpecialContext =
+        lottoTypeGameType.toUpperCase() === "2D" && winningCombination
+          ? await getTwoDSpecialWinnerContext(
+              resultDrawDate,
+              winningCombination,
+            )
+          : null;
+
+      const asset = await createWinnerImageAsset({
+        rows: mapWinnerRows(bets as Bet[], {
+          remarksGetter: (bet) =>
+            bet.is_super_jackpot
+              ? "X3 SUPER JACKPOT"
+              : bet.is_return_bet
+                ? "RETURN BET"
+                : "JACKPOT",
+          twoDSpecialContext,
+        }),
         selectedDate: resultDrawDate,
         drawName: lottoTypeName,
         winningCombination: winningCombination || "-",
         logoImageSrc,
         fileNamePrefix: `${getFileNamePart(lottoTypeName)}_all_winning_bets`,
       });
+
+      onWinnerImagePreview(asset, "All Winning Bets Preview");
 
       await createResultLog({
         variables: {
@@ -353,9 +360,10 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
     userId,
     lottoTypeName,
     getFileNamePart,
-    mapToWinnerRows,
+    lottoTypeGameType,
     winningCombination,
     logoImageSrc,
+    onWinnerImagePreview,
   ]);
 
   return (

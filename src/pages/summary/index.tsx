@@ -31,7 +31,7 @@ const SummaryPage: React.FC = () => {
   return (
     <AdminTemplate>
       <div className="w-full h-min-screen px-4 sm:mx-2 my-6 md:mx-10 min-h-screen bg-black p-8 rounded-2xl">
-        <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+        <div className="flex flex-col gap-6 w-full">
           {/* Lotto type dropdown and date selectors */}
           <div className="flex justify-end gap-4 items-end mb-2">
             {/* Date Inputs */}

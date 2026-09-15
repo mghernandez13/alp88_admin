@@ -20,6 +20,12 @@ type BetTypeRow = {
   code: string;
 };
 
+type DrawResultRow = {
+  draw_type: string | number;
+  draw_date: string;
+  combination: string | null;
+};
+
 type LottoStats = {
   totalBets: number;
   totalStraightBets: number;
@@ -99,6 +105,77 @@ const toManilaDateString = (createdAt: string) => {
     month: "2-digit",
     day: "2-digit",
   }).format(date);
+};
+
+const normalizeBetNumber = (value: string) =>
+  value.trim().replace(/^0+(?=\d)/, "");
+
+const splitAndNormalizeNumbers = (combinationValue: string) =>
+  combinationValue.split("-").map(normalizeBetNumber);
+
+const checkIfRambolitoWinner = (
+  betNumbers: string[],
+  resultNumbers: string[],
+) => {
+  return (
+    betNumbers.length === resultNumbers.length &&
+    [...betNumbers].sort().join("-") === [...resultNumbers].sort().join("-")
+  );
+};
+
+const buildTwoDSpecialContext = (
+  drawDate: string,
+  winningCombination: string,
+  twoDPetsadaIsActive: boolean,
+  twoDMonthlyBracketIsActive: boolean,
+) => {
+  const resultNumbers = splitAndNormalizeNumbers(winningCombination);
+
+  if (resultNumbers.length !== 2) {
+    return {
+      isPetsada: false,
+      isMonthlyBracket: false,
+      resultNumbers,
+    };
+  }
+
+  const date = new Date(`${drawDate}T12:00:00+08:00`);
+  const targetTimezone = "Asia/Manila";
+
+  const monthNumericToday = new Intl.DateTimeFormat("en-US", {
+    timeZone: targetTimezone,
+    month: "numeric",
+  }).format(date);
+  const dayNumericToday = new Intl.DateTimeFormat("en-US", {
+    timeZone: targetTimezone,
+    day: "numeric",
+  }).format(date);
+  const dayNumericYesterday = new Intl.DateTimeFormat("en-US", {
+    timeZone: targetTimezone,
+    day: "numeric",
+  }).format(new Date(date.getTime() - 24 * 60 * 60 * 1000));
+  const dayNumericTomorrow = new Intl.DateTimeFormat("en-US", {
+    timeZone: targetTimezone,
+    day: "numeric",
+  }).format(new Date(date.getTime() + 24 * 60 * 60 * 1000));
+
+  const isPetsada =
+    twoDPetsadaIsActive &&
+    resultNumbers.includes(monthNumericToday) &&
+    (resultNumbers.includes(dayNumericToday) ||
+      resultNumbers.includes(dayNumericYesterday) ||
+      resultNumbers.includes(dayNumericTomorrow));
+
+  const isMonthlyBracket =
+    !isPetsada &&
+    twoDMonthlyBracketIsActive &&
+    resultNumbers.includes(monthNumericToday);
+
+  return {
+    isPetsada,
+    isMonthlyBracket,
+    resultNumbers,
+  };
 };
 
 Deno.serve(async (req: Request) => {
@@ -190,6 +267,43 @@ Deno.serve(async (req: Request) => {
     const sTypeId = typedBetTypes.find((item) => item.code === "S")?.id;
     const rTypeId = typedBetTypes.find((item) => item.code === "R")?.id;
 
+    const { data: settingsData, error: settingsError } = await supabase
+      .from("settings")
+      .select("name, value");
+
+    if (settingsError) {
+      throw settingsError;
+    }
+
+    const twoDPetsadaIsActive =
+      settingsData?.find(
+        (setting) => setting.name === "2d_petsada_prize_is_active",
+      )?.value === "true";
+
+    const twoDMonthlyBracketIsActive =
+      settingsData?.find(
+        (setting) => setting.name === "2d_monthly_bracket_prize_is_active",
+      )?.value === "true";
+
+    const { data: drawResults, error: drawResultsError } = await supabase
+      .from("draw_results")
+      .select("draw_type, draw_date, combination")
+      .in("draw_type", lottoTypeIds)
+      .gte("draw_date", startDate)
+      .lte("draw_date", endDate)
+      .eq("is_archive", false);
+
+    if (drawResultsError) {
+      throw drawResultsError;
+    }
+
+    const drawResultMap = new Map<string, DrawResultRow>();
+
+    for (const row of (drawResults ?? []) as DrawResultRow[]) {
+      const key = `${String(row.draw_type)}|${row.draw_date}`;
+      drawResultMap.set(key, row);
+    }
+
     const byLottoTypeId: Record<string, LottoStats> = Object.fromEntries(
       lottoTypeIds.map((lottoTypeId) => [
         String(lottoTypeId),
@@ -204,7 +318,7 @@ Deno.serve(async (req: Request) => {
       const { data: bets, error: betsError } = await supabase
         .from("bets")
         .select(
-          "lotto_type_id, bet_type_id, hit, prize_amount, bet_amount, is_super_jackpot, is_monthly_bracket_winner, is_petsada_winner, created_at",
+          "lotto_type_id, bet_type_id, combination, hit, prize_amount, bet_amount, is_super_jackpot, created_at",
         )
         .in("lotto_type_id", lottoTypeIds)
         .eq("bet_status", "completed")
@@ -263,15 +377,55 @@ Deno.serve(async (req: Request) => {
           summaryStats.totalWinners += 1;
           lottoStats.totalWinners += 1;
 
-          if (bet.is_monthly_bracket_winner) {
-            summaryStats.dailyMonthlyBracketWinners[betDate] += 1;
-            lottoStats.dailyMonthlyBracketWinners[betDate] += 1;
+          const isStraightType =
+            sTypeId != null && String(betTypeId) === String(sTypeId);
+          const isRambleType =
+            rTypeId != null && String(betTypeId) === String(rTypeId);
+
+          let countedSpecialBucket = false;
+
+          if (
+            (isStraightType || isRambleType) &&
+            typeof bet.combination === "string"
+          ) {
+            const drawResult = drawResultMap.get(`${lottoTypeKey}|${betDate}`);
+
+            if (drawResult?.combination) {
+              const specialContext = buildTwoDSpecialContext(
+                betDate,
+                drawResult.combination,
+                twoDPetsadaIsActive,
+                twoDMonthlyBracketIsActive,
+              );
+
+              const betNumbers = splitAndNormalizeNumbers(bet.combination);
+              const isStraightWinner =
+                isStraightType &&
+                betNumbers.length === specialContext.resultNumbers.length &&
+                betNumbers[0] === specialContext.resultNumbers[0] &&
+                betNumbers[1] === specialContext.resultNumbers[1];
+              const isRambleWinner =
+                isRambleType &&
+                checkIfRambolitoWinner(
+                  betNumbers,
+                  specialContext.resultNumbers,
+                );
+
+              if (isStraightWinner || isRambleWinner) {
+                if (specialContext.isPetsada) {
+                  summaryStats.dailyPetsadaWinners[betDate] += 1;
+                  lottoStats.dailyPetsadaWinners[betDate] += 1;
+                  countedSpecialBucket = true;
+                } else if (specialContext.isMonthlyBracket) {
+                  summaryStats.dailyMonthlyBracketWinners[betDate] += 1;
+                  lottoStats.dailyMonthlyBracketWinners[betDate] += 1;
+                  countedSpecialBucket = true;
+                }
+              }
+            }
           }
 
-          if (bet.is_petsada_winner) {
-            summaryStats.dailyPetsadaWinners[betDate] += 1;
-            lottoStats.dailyPetsadaWinners[betDate] += 1;
-          } else {
+          if (!countedSpecialBucket) {
             if (sTypeId != null && String(betTypeId) === String(sTypeId)) {
               summaryStats.dailyStraightWinners[betDate] += 1;
               lottoStats.dailyStraightWinners[betDate] += 1;
@@ -309,7 +463,12 @@ Deno.serve(async (req: Request) => {
       },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message?: unknown }).message)
+          : JSON.stringify(error);
 
     return new Response(JSON.stringify({ error: message }), {
       status: 500,

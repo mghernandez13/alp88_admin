@@ -169,8 +169,9 @@ Deno.serve(async (req: Request) => {
         .in("lotto_type_id", lottoTypeIds)
         .eq("bet_status", "completed")
         .eq("is_dummy_bet", false)
-        .gte("created_at", `${date}T00:00:00`)
-        .lte("created_at", `${date}T23:59:59.999`)
+        .eq("is_archive", false)
+        .gte("created_at", `${date}T00:00:00+08:00`)
+        .lte("created_at", `${date}T23:59:59.999+08:00`)
         .range(offset, offset + BATCH_SIZE - 1);
 
       if (betsError) {
@@ -206,9 +207,10 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        if (typeof bet.remittance_amount === "number") {
-          summary.totalRemittance += bet.remittance_amount;
-        }
+        // if (typeof bet.remittance_amount === "number") {
+        //   summary.totalRemittance += bet.remittance_amount;
+        // }
+        summary.totalRemittance = summary.totalNetSales * 0.6;
       }
 
       if (bets.length < BATCH_SIZE) {

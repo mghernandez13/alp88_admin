@@ -81,6 +81,7 @@ export type BetRelation<T> = T | T[] | null;
 
 export type BetSupabaseRow = {
   id: string;
+  created_by?: string | null;
   lotto_types: BetRelation<{
     id: string;
     name: string;

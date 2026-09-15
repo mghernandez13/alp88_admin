@@ -69,4 +69,5 @@ export const USER_PERMISSIONS = [
 
 export const GAME_TYPES = ["2D", "3D", "LP3"];
 
-export const SUPER_ADMIN_EMAIL = "superadmin@tresglobal.online";
+export const SUPER_ADMIN_EMAIL =
+  import.meta.env.VITE_SUPERADMIN_EMAIL ?? "superadmin@alp88.online";

@@ -114,11 +114,9 @@ export const aggregateBets = (
       }
     }
   });
-  // Net for LP3
-  result.lp3.netBets =
-    result.lp3.normalBets + result.lp3.returnedBets + result.lp3.freeBets;
-  result.lp3.netAmount =
-    result.lp3.normalAmount + result.lp3.returnedAmount + result.lp3.freeAmount;
+  // Net for LP3 excludes return bet amounts/counts from net totals.
+  result.lp3.netBets = result.lp3.normalBets + result.lp3.freeBets;
+  result.lp3.netAmount = result.lp3.normalAmount + result.lp3.freeAmount;
 
   result.d2.net.sbets =
     result.d2["2PM"].sbets + result.d2["5PM"].sbets + result.d2["9PM"].sbets;

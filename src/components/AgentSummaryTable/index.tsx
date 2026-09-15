@@ -35,6 +35,13 @@ type EdgeProfile = {
   id: string;
   full_name: string | null;
   remittance_percent: number | null;
+  upline?: string | null;
+};
+
+type AgentHierarchyProfile = {
+  id: string;
+  full_name: string | null;
+  upline: string | null;
 };
 
 type EdgeRow = {
@@ -46,6 +53,11 @@ type EdgeRow = {
 
 const pct = (n: number | null | undefined) => (n != null ? `${n}%` : "60%");
 const fmt = (n: number) => n.toLocaleString();
+const getRemittancePercent = (n: number | null | undefined) => n ?? 60;
+const getRemittanceAmountFromPercent = (
+  total: number,
+  remittancePercent: number | null | undefined,
+) => total * (getRemittancePercent(remittancePercent) / 100);
 const bfmt = (s: EdgeStats, g: "twoD" | "threeD", slot: DrawSlot | "net") =>
   `${s[g][slot].sbets} | ${s[g][slot].rbets}`;
 
@@ -103,42 +115,58 @@ const toExportRow = (
   adminName: string,
   remittancePercent: number | null | undefined,
   s: EdgeStats,
-): Record<string, number | string> => ({
-  "Head Admin": headAdminName,
-  Admin: adminName,
-  "Total Overall": s.overallTotal,
-  "%": remittancePercent ?? 60,
-  "Remittance ALL": s.remittances.total.amount,
-  "Remittance LP3": s.remittances.lp3.amount,
-  "Remittance 2D 2PM": s.remittances.twoD["2PM"].amount,
-  "Remittance 2D 5PM": s.remittances.twoD["5PM"].amount,
-  "Remittance 2D 9PM": s.remittances.twoD["9PM"].amount,
-  "Remittance 3D 2PM": s.remittances.threeD["2PM"].amount,
-  "Remittance 3D 5PM": s.remittances.threeD["5PM"].amount,
-  "LP3 6/55 9PM Amount": s.lp3.netAmount,
-  "3D 2PM Bets (S|R)": `${s.threeD["2PM"].sbets} | ${s.threeD["2PM"].rbets}`,
-  "3D 2PM Amount": s.threeD["2PM"].amount,
-  "3D 5PM Bets (S|R)": `${s.threeD["5PM"].sbets} | ${s.threeD["5PM"].rbets}`,
-  "3D 5PM Amount": s.threeD["5PM"].amount,
-  "3D 9PM Bets (S|R)": `${s.threeD["9PM"].sbets} | ${s.threeD["9PM"].rbets}`,
-  "3D 9PM Amount": s.threeD["9PM"].amount,
-  "3D Net Bets (S|R)": `${s.threeD.net.sbets} | ${s.threeD.net.rbets}`,
-  "3D Net Amount": s.threeD.net.amount,
-  "2D 2PM Bets (S|R)": `${s.twoD["2PM"].sbets} | ${s.twoD["2PM"].rbets}`,
-  "2D 2PM Amount": s.twoD["2PM"].amount,
-  "2D 5PM Bets (S|R)": `${s.twoD["5PM"].sbets} | ${s.twoD["5PM"].rbets}`,
-  "2D 5PM Amount": s.twoD["5PM"].amount,
-  "2D 9PM Bets (S|R)": `${s.twoD["9PM"].sbets} | ${s.twoD["9PM"].rbets}`,
-  "2D 9PM Amount": s.twoD["9PM"].amount,
-  "2D Net Bets (S|R)": `${s.twoD.net.sbets} | ${s.twoD.net.rbets}`,
-  "2D Net Amount": s.twoD.net.amount,
-});
+  options?: {
+    remittanceAllOverride?: number;
+    level1Name?: string;
+    level2Name?: string;
+  },
+): Record<string, number | string> => {
+  const percent = getRemittancePercent(remittancePercent);
+  const remittanceAll =
+    options?.remittanceAllOverride ?? s.remittances.total.amount;
+
+  return {
+    "Head Admin": headAdminName,
+    Admin: adminName,
+    "Level 1": options?.level1Name ?? "",
+    "Level 2": options?.level2Name ?? "",
+    "Total Overall": s.overallTotal,
+    "%": percent,
+    "Remittance ALL": remittanceAll,
+    "Remittance LP3": s.remittances.lp3.amount,
+    "Remittance 2D 2PM": s.remittances.twoD["2PM"].amount,
+    "Remittance 2D 5PM": s.remittances.twoD["5PM"].amount,
+    "Remittance 2D 9PM": s.remittances.twoD["9PM"].amount,
+    "Remittance 3D 2PM": s.remittances.threeD["2PM"].amount,
+    "Remittance 3D 5PM": s.remittances.threeD["5PM"].amount,
+    "LP3 6/55 9PM Amount": s.lp3.netAmount,
+    "3D 2PM Bets (S|R)": `${s.threeD["2PM"].sbets} | ${s.threeD["2PM"].rbets}`,
+    "3D 2PM Amount": s.threeD["2PM"].amount,
+    "3D 5PM Bets (S|R)": `${s.threeD["5PM"].sbets} | ${s.threeD["5PM"].rbets}`,
+    "3D 5PM Amount": s.threeD["5PM"].amount,
+    "3D 9PM Bets (S|R)": `${s.threeD["9PM"].sbets} | ${s.threeD["9PM"].rbets}`,
+    "3D 9PM Amount": s.threeD["9PM"].amount,
+    "3D Net Bets (S|R)": `${s.threeD.net.sbets} | ${s.threeD.net.rbets}`,
+    "3D Net Amount": s.threeD.net.amount,
+    "2D 2PM Bets (S|R)": `${s.twoD["2PM"].sbets} | ${s.twoD["2PM"].rbets}`,
+    "2D 2PM Amount": s.twoD["2PM"].amount,
+    "2D 5PM Bets (S|R)": `${s.twoD["5PM"].sbets} | ${s.twoD["5PM"].rbets}`,
+    "2D 5PM Amount": s.twoD["5PM"].amount,
+    "2D 9PM Bets (S|R)": `${s.twoD["9PM"].sbets} | ${s.twoD["9PM"].rbets}`,
+    "2D 9PM Amount": s.twoD["9PM"].amount,
+    "2D Net Bets (S|R)": `${s.twoD.net.sbets} | ${s.twoD.net.rbets}`,
+    "2D Net Amount": s.twoD.net.amount,
+  };
+};
 
 const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
   const { session } = UserAuth();
   const userId = session?.user?.id as string | undefined;
   const [loading, setLoading] = useState(false);
   const [agentRows, setAgentRows] = useState<AgentRow[]>([]);
+  const [agentHierarchyProfiles, setAgentHierarchyProfiles] = useState<
+    AgentHierarchyProfile[]
+  >([]);
   const [hoveredTeamId, setHoveredTeamId] = useState<string | null>(null);
 
   const day = getDayNameFromDateString(selectedDate);
@@ -182,11 +210,47 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
     [agentRows],
   );
 
-  const renderDataRow = (row: EdgeRow, isHead: boolean, teamId: string) => {
+  const grandTotalStats = useMemo(() => {
+    if (groups.length === 0) return null;
+
+    return sumRows(
+      groups.flatMap((group) => [group.headAdmin, ...group.admins]),
+    );
+  }, [groups]);
+
+  // Depth relative to the team's head admin: 1 = Admin, 2 = Level 1, 3+ = Level 2.
+  const getAgentDepth = (
+    profileId: string | null | undefined,
+    headAdminId: string | null | undefined,
+  ) => {
+    if (!profileId || !headAdminId) return 1;
+
+    let depth = 0;
+    let currentId: string | null | undefined = profileId;
+    const visited = new Set<string>();
+
+    while (currentId && currentId !== headAdminId && !visited.has(currentId)) {
+      visited.add(currentId);
+      depth++;
+      currentId = agentHierarchyProfiles.find(
+        (profile) => String(profile.id) === String(currentId),
+      )?.upline;
+    }
+
+    return depth || 1;
+  };
+
+  const renderDataRow = (
+    row: EdgeRow,
+    isHead: boolean,
+    teamId: string,
+    headAdminId?: string,
+  ) => {
     const profile = isHead ? row.headAdmin : row.admin;
     const s = row.stats;
     const td = "px-2 py-2 whitespace-nowrap";
     const isHovered = hoveredTeamId === teamId;
+    const depth = isHead ? 0 : getAgentDepth(profile?.id, headAdminId);
     return (
       <tr
         key={profile?.id}
@@ -205,7 +269,13 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
           {isHead ? (profile?.full_name ?? "—") : ""}
         </td>
         <td className="px-4 py-2">
-          {!isHead ? (profile?.full_name ?? "—") : ""}
+          {!isHead && depth === 1 ? (profile?.full_name ?? "—") : ""}
+        </td>
+        <td className="px-4 py-2">
+          {!isHead && depth === 2 ? (profile?.full_name ?? "—") : ""}
+        </td>
+        <td className="px-4 py-2">
+          {!isHead && depth >= 3 ? (profile?.full_name ?? "—") : ""}
         </td>
         <td className="px-4 py-2">{fmt(s.overallTotal)}</td>
         <td className="px-4 py-2">{pct(profile?.remittance_percent)}</td>
@@ -258,15 +328,25 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
 
       for (const adminRow of group.admins) {
         const adminName = adminRow.admin?.full_name ?? "—";
+        const depth = getAgentDepth(adminRow.admin?.id, headAdmin?.id);
         exportRows.push(
           toExportRow(
             "",
-            adminName,
+            depth === 1 ? adminName : "",
             adminRow.admin?.remittance_percent,
             adminRow.stats,
+            {
+              level1Name: depth === 2 ? adminName : "",
+              level2Name: depth >= 3 ? adminName : "",
+            },
           ),
         );
       }
+
+      const teamTotalRemittance = getRemittanceAmountFromPercent(
+        teamStats.overallTotal,
+        headAdmin?.remittance_percent,
+      );
 
       exportRows.push(
         toExportRow(
@@ -274,7 +354,14 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
           "",
           headAdmin?.remittance_percent,
           teamStats,
+          { remittanceAllOverride: teamTotalRemittance },
         ),
+      );
+    }
+
+    if (grandTotalStats) {
+      exportRows.push(
+        toExportRow("GRAND TOTAL OVERALL", "", null, grandTotalStats),
       );
     }
 
@@ -326,6 +413,36 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
     };
   }, [selectedDate, userId]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadHierarchyProfiles = async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, upline, is_archive")
+        .eq("is_archive", false)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Failed to fetch agent hierarchy profiles:", error);
+        if (!cancelled) {
+          setAgentHierarchyProfiles([]);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        setAgentHierarchyProfiles((data ?? []) as AgentHierarchyProfile[]);
+      }
+    };
+
+    void loadHierarchyProfiles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="mt-10">
       <div className="flex justify-end items-center mb-4">
@@ -348,6 +465,12 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
               </th>
               <th className="px-4 py-2" rowSpan={3}>
                 Admin
+              </th>
+              <th className="px-4 py-2" rowSpan={3}>
+                Level 1
+              </th>
+              <th className="px-4 py-2" rowSpan={3}>
+                Level 2
               </th>
               <th className="px-4 py-2" rowSpan={3}>
                 Total Overall
@@ -449,7 +572,7 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
               <tr>
                 <td
                   className="px-4 py-3 text-center text-gray-400"
-                  colSpan={28}
+                  colSpan={30}
                 >
                   <LoadingSpinner width={40} height={40} />
                 </td>
@@ -459,7 +582,7 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
               <tr>
                 <td
                   className="px-4 py-3 text-center text-gray-500"
-                  colSpan={28}
+                  colSpan={30}
                 >
                   No agent rows found.
                 </td>
@@ -475,7 +598,15 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
                 return (
                   <Fragment key={haProfile?.id ?? String(Math.random())}>
                     {renderDataRow(g.headAdmin, true, teamId)}
-                    {g.admins.map((ar) => renderDataRow(ar, false, teamId))}
+                    {g.admins.map((ar) => {
+                      const adminTeamId = `${teamId}-${ar.admin?.id ?? ar.headAdmin?.id ?? "unknown"}`;
+                      return renderDataRow(
+                        ar,
+                        false,
+                        adminTeamId,
+                        haProfile?.id,
+                      );
+                    })}
                     <tr
                       className={[
                         "font-bold border-t border-gray-600",
@@ -490,13 +621,21 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
                         )
                       }
                     >
-                      <td className="px-4 py-2" colSpan={3}>
+                      <td className="px-4 py-2" colSpan={4}>
                         TEAM TOTAL OVERALL
                       </td>
+                      <td className="px-4 py-2">{fmt(gt.overallTotal)}</td>
                       <td className="px-4 py-2">
                         {pct(haProfile?.remittance_percent)}
                       </td>
-                      <td className={td}>{fmt(gt.remittances.total.amount)}</td>
+                      <td className={td}>
+                        {fmt(
+                          getRemittanceAmountFromPercent(
+                            gt.overallTotal,
+                            haProfile?.remittance_percent,
+                          ),
+                        )}
+                      </td>
                       <td className={td}>{fmt(gt.remittances.lp3.amount)}</td>
                       <td className={td}>
                         {fmt(gt.remittances.twoD["2PM"].amount)}
@@ -534,6 +673,87 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
                   </Fragment>
                 );
               })}
+            {grandTotalStats && (
+              <tr className="font-bold border-t border-gray-600 bg-[#181b10]">
+                <td className="px-4 py-2" colSpan={4}>
+                  GRAND TOTAL OVERALL
+                </td>
+                <td className="px-4 py-2">{fmt(grandTotalStats.overallTotal)}</td>
+                <td className="px-4 py-2">-</td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.remittances.total.amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.remittances.lp3.amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.remittances.twoD["2PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.remittances.twoD["5PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.remittances.twoD["9PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.remittances.threeD["2PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.remittances.threeD["5PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.lp3.netAmount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {bfmt(grandTotalStats, "threeD", "2PM")}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.threeD["2PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {bfmt(grandTotalStats, "threeD", "5PM")}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.threeD["5PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {bfmt(grandTotalStats, "threeD", "9PM")}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.threeD["9PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {bfmt(grandTotalStats, "threeD", "net")}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.threeD.net.amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {bfmt(grandTotalStats, "twoD", "2PM")}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.twoD["2PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {bfmt(grandTotalStats, "twoD", "5PM")}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.twoD["5PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {bfmt(grandTotalStats, "twoD", "9PM")}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.twoD["9PM"].amount)}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {bfmt(grandTotalStats, "twoD", "net")}
+                </td>
+                <td className={"px-2 py-2 whitespace-nowrap"}>
+                  {fmt(grandTotalStats.twoD.net.amount)}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

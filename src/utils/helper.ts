@@ -1,3 +1,5 @@
+import { SUPER_ADMIN_EMAIL } from "../types/constants";
+
 // Formats a date string (YYYY-MM-DD or ISO) to 'Month Day, Year' (e.g., January 20, 2926)
 export const formatDrawDate = (dateStr: string): string => {
   if (!dateStr) return "";
@@ -9,6 +11,21 @@ export const formatDrawDate = (dateStr: string): string => {
     day: "numeric",
   });
 };
+
+export const formatDateTime12h = (dateTimeStr: string): string => {
+  if (!dateTimeStr) return "";
+  const date = new Date(dateTimeStr);
+  if (isNaN(date.getTime())) return dateTimeStr;
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
 export const capitalizeFirstLetter = (str: string) => {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -87,7 +104,7 @@ export const isValueNumeric = (value: string) => {
 };
 
 export const isSuperAdmin = (email: string | undefined): boolean => {
-  return email === "superadmin@tresglobal.online";
+  return email === SUPER_ADMIN_EMAIL;
 };
 
 export const normalizeSingleRelation = <T>(value: T | T[] | null): T | null => {

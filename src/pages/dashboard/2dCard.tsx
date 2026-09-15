@@ -271,7 +271,7 @@ const TwoDCard: React.FC<DashboardCardProps> = ({ startDate, endDate }) => {
 
                   <div className="flex flex-col items-center sm:items-start px-4 sm:px-0">
                     <span className="text-sm text-slate-400 font-medium tracking-wide">
-                      Total Rambolito Bets
+                      Total Ramble Bets
                     </span>
                     <span className="text-3xl font-extrabold text-yellow-400 drop-shadow-lg">
                       {twoDLoading || statsLoading ? (
@@ -393,7 +393,7 @@ const TwoDCard: React.FC<DashboardCardProps> = ({ startDate, endDate }) => {
                           <Bar
                             dataKey="rambolitoWinners"
                             fill="#35e94d"
-                            name="Rambolito Winners"
+                            name="Ramble Winners"
                           />
                           <Bar
                             dataKey="monthlyBracketWinners"

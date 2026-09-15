@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import ViewAgentModal from "../../components/modals/agent/ViewAgentModal";
-import type { SortDirection } from "../../types/constants";
+import { SUPER_ADMIN_EMAIL, type SortDirection } from "../../types/constants";
 import { useCheckUserPermissions } from "../../hooks/useCheckUserPermission";
 import PrimaryButton from "../../components/generic/buttons/Primary";
 import IconTableActionButton from "../../components/generic/buttons/IconTableActionButton";
@@ -271,7 +271,7 @@ const AgentsPage: React.FC = () => {
                   <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
                 </div>
               </div>
-              {item.node.email !== "superadmin@tresglobal.online" && (
+              {item.node.email !== SUPER_ADMIN_EMAIL && (
                 <>
                   <div className="relative flex flex-col items-center group">
                     <IconTableActionButton

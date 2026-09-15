@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import type { TableHeaderProps } from "../../../types/generic";
 import DateFilterDropdown from "./DateFilterDropdown";
-import { Clock3 } from "lucide-react";
+import { ChevronDown, Clock3 } from "lucide-react";
 
 const TableHeader: React.FC<TableHeaderProps> = (props) => {
   const {
@@ -11,8 +11,13 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
     setSearchParams,
     pageSize,
     setPageSize,
-    pageSizeOptions = [5, 10, 20, 50],
+    pageSizeOptions = [5, 10, 20, 50, 100, 500, 1000],
+    selectedCount = 0,
+    onDeleteSelectedClick,
+    bulkActionPlacement = "column",
   } = props;
+  const [deleteMenuOpen, setDeleteMenuOpen] = useState(false);
+  const deleteMenuRef = useRef<HTMLDivElement | null>(null);
   const searchQuery = searchParams.get("search") || "";
   const [inputValue, setInputValue] = useState(searchQuery);
   // Track which filter dropdown is open (by label)
@@ -78,6 +83,26 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
     };
   }, [handleClickFilterMenu]);
 
+  useEffect(() => {
+    const handleClickOutsideDeleteMenu = (event: MouseEvent) => {
+      if (
+        deleteMenuRef.current &&
+        !deleteMenuRef.current.contains(event.target as Node)
+      ) {
+        setDeleteMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutsideDeleteMenu);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideDeleteMenu);
+    };
+  }, []);
+
+  // hide the toolbar dropdown again once the selection is cleared
+  useEffect(() => {
+    if (selectedCount === 0) setDeleteMenuOpen(false);
+  }, [selectedCount]);
+
   // Debounce: Update URL after 500ms of no typing
   useEffect(() => {
     if (searchChange) {
@@ -98,7 +123,7 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
         <div className="flex items-center gap-3">
           <label className="sr-only">Page size</label>
           <select
-            value={pageSize}
+            value={String(pageSize)}
             onChange={(e) => {
               const newSize = Number(e.target.value);
               setPageSize(newSize);
@@ -106,11 +131,13 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
             }}
             className="bg-[#222222] border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 py-2 px-1 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
           >
-            {pageSizeOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt} / page
-              </option>
-            ))}
+            {pageSizeOptions.map((opt) => {
+              return (
+                <option key={opt} value={String(opt)}>
+                  {opt} / page
+                </option>
+              );
+            })}
           </select>
           <label className="sr-only">Search</label>
           <div className="relative w-full">
@@ -147,6 +174,31 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
       <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
         {/* Create button removed as requested */}
         <div className="flex items-center space-x-3 w-full md:w-auto">
+          {bulkActionPlacement === "toolbar" && selectedCount > 0 && (
+            <div className="relative" ref={deleteMenuRef}>
+              <button
+                onClick={() => setDeleteMenuOpen((o) => !o)}
+                className={`w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-[#222222] rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 ${deleteMenuOpen ? "ring-2 ring-primary-500" : ""}`}
+                type="button"
+              >
+                {`Actions (${selectedCount})`}
+                <ChevronDown className="-mr-1 ml-1.5 w-5 h-5" />
+              </button>
+              {deleteMenuOpen && (
+                <div className="absolute left-0 mt-2 w-40 bg-[#222222] border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10">
+                  <button
+                    onClick={() => {
+                      setDeleteMenuOpen(false);
+                      onDeleteSelectedClick?.();
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 bg-black text-white"
+                  >
+                    Delete selected
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           {tableFilter && (
             <>
               {Object.values(tableFilter).map((filter) => (

@@ -21,6 +21,10 @@ const NotificationsPage: React.FC = () => {
   const currentPage = Number(searchParams.get("page")) || 1;
   const searchQuery = searchParams.get("search") || "";
   const [pageSize, setPageSize] = useState<number>(10);
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: "",
+    end: "",
+  });
   const offset = (currentPage - 1) * pageSize;
 
   const [sortConfig, setSortConfig] = useState<{
@@ -49,6 +53,10 @@ const NotificationsPage: React.FC = () => {
       searchTerm,
       receiverId,
       sortOrder: sortVariable,
+      startDate: dateRange.start
+        ? `${dateRange.start}T00:00:00.000`
+        : undefined,
+      endDate: dateRange.end ? `${dateRange.end}T23:59:59.999` : undefined,
     },
     notifyOnNetworkStatusChange: true,
     fetchPolicy: "network-only",
@@ -79,31 +87,31 @@ const NotificationsPage: React.FC = () => {
             onClick={() => handleSort("id")}
             className="relative px-4 py-3 cursor-pointer"
           >
-            ID
+            <span className="mr-2">ID</span>
             {sortConfig.column === "id" ? (
               sortConfig.direction === "AscNullsFirst" ? (
-                <ChevronUp className="absolute right-2 top-4 w-4 h-4" />
+                <ChevronUp className="absolute right-2 top-3 w-4 h-4" />
               ) : (
-                <ChevronDown className="absolute right-2 top-4 w-4 h-4" />
+                <ChevronDown className="absolute right-2 top-3 w-4 h-4" />
               )
             ) : (
-              <ChevronsUpDown className="absolute right-2 top-4 w-4 h-4" />
+              <ChevronsUpDown className="absolute right-2 top-3 w-4 h-4" />
             )}
           </th>
           <th
             scope="col"
             onClick={() => handleSort("sender")}
-            className="relative px-4 py-3 cursor-pointer"
+            className="relative flex px-4 py-3 cursor-pointer"
           >
-            Sender
+            <span className="mr-2">Sender</span>
             {sortConfig.column === "sender" ? (
               sortConfig.direction === "AscNullsFirst" ? (
-                <ChevronUp className="absolute right-2 top-4 w-4 h-4" />
+                <ChevronUp className="absolute right-2 w-4 h-4" />
               ) : (
-                <ChevronDown className="absolute right-2 top-4 w-4 h-4" />
+                <ChevronDown className="absolute right-2 w-4 h-4" />
               )
             ) : (
-              <ChevronsUpDown className="absolute right-2 top-4 w-4 h-4" />
+              <ChevronsUpDown className="absolute right-2 w-4 h-4" />
             )}
           </th>
           <th scope="col" className="px-4 py-3">
@@ -117,15 +125,15 @@ const NotificationsPage: React.FC = () => {
             onClick={() => handleSort("unread")}
             className="relative px-4 py-3 cursor-pointer"
           >
-            Unread
+            <span className="mr-2">Unread</span>
             {sortConfig.column === "unread" ? (
               sortConfig.direction === "AscNullsFirst" ? (
-                <ChevronUp className="absolute right-2 top-4 w-4 h-4" />
+                <ChevronUp className="absolute right-2 top-3 w-4 h-4" />
               ) : (
-                <ChevronDown className="absolute right-2 top-4 w-4 h-4" />
+                <ChevronDown className="absolute right-2 top-3 w-4 h-4" />
               )
             ) : (
-              <ChevronsUpDown className="absolute right-2 top-4 w-4 h-4" />
+              <ChevronsUpDown className="absolute right-2 top-3 w-4 h-4" />
             )}
           </th>
           <th
@@ -136,12 +144,12 @@ const NotificationsPage: React.FC = () => {
             Created At
             {sortConfig.column === "created_at" ? (
               sortConfig.direction === "AscNullsFirst" ? (
-                <ChevronUp className="absolute right-2 top-4 w-4 h-4" />
+                <ChevronUp className="absolute right-2 top-3 w-4 h-4" />
               ) : (
-                <ChevronDown className="absolute right-2 top-4 w-4 h-4" />
+                <ChevronDown className="absolute right-2 top-3 w-4 h-4" />
               )
             ) : (
-              <ChevronsUpDown className="absolute right-2 top-4 w-4 h-4" />
+              <ChevronsUpDown className="absolute right-2 top-3 w-4 h-4" />
             )}
           </th>
         </>
@@ -167,6 +175,24 @@ const NotificationsPage: React.FC = () => {
   }, [sortConfig]);
 
   const totalCount = data?.notificationsCollection?.totalCount ?? 0;
+
+  const tableFilter = {
+    dateRange: {
+      label: "Date Filter",
+      selectedFilter: [],
+      setSelectedFilter: () => {},
+      data: [
+        {
+          name: "Date Filter",
+          value: "date-filter",
+          count: 0,
+          start: dateRange.start,
+          end: dateRange.end,
+          setDateRange,
+        },
+      ],
+    },
+  };
 
   return (
     <AdminTemplate>
@@ -195,6 +221,7 @@ const NotificationsPage: React.FC = () => {
           setPageSize={setPageSize}
           bulkAction={false}
           onDeleteSelected={() => {}}
+          tableFilter={tableFilter}
         />
       </div>
     </AdminTemplate>

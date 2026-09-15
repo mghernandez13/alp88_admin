@@ -11,8 +11,13 @@ import { supabase } from "../../db/supabase";
 import Skeleton from "../generic/Skeleton";
 import PrimaryButton from "../generic/buttons/Primary";
 import Loading from "../generic/icons/Loading";
-import { downloadWinnersImage, fetchWinnerRows } from "../../utils/winners";
+import {
+  createWinnerImageAsset,
+  fetchWinnerRows,
+  type WinnerImageAsset,
+} from "../../utils/winners";
 import Swal from "sweetalert2";
+import WinnerImagePreviewModal from "../modals/results/WinnerImagePreviewModal.tsx";
 
 interface SummaryResponse {
   byLottoTypeId?: Record<string, Partial<DrawStats>>;
@@ -51,6 +56,10 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
     Record<string, boolean>
   >({});
   const [overallStats, setOverallStats] = useState<DrawStats>(initialValues);
+  const [previewAsset, setPreviewAsset] = useState<WinnerImageAsset | null>(
+    null,
+  );
+  const [previewTitle, setPreviewTitle] = useState("");
   const day = getDayNameFromDateString(selectedDate);
   const safeGameType = gameType ?? "lotto";
   const logoImageUrl = `https://lnnpmtjuzgrcdtusfrty.supabase.co/storage/v1/object/public/app/lotto-types/${safeGameType}%20Lotto%20Logo.png`;
@@ -168,6 +177,12 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
     }));
   };
 
+  const closePreview = () => {
+    previewAsset?.revoke();
+    setPreviewAsset(null);
+    setPreviewTitle("");
+  };
+
   const handleDownloadWinners = async (
     lottoTypeId: string | string[],
     loadingKey: string,
@@ -181,6 +196,8 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
       const winners = await fetchWinnerRows({
         lottoTypeId,
         selectedDate,
+        winningCombination,
+        gameType: safeGameType,
       });
 
       if (!winners.length) {
@@ -192,7 +209,7 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
         return;
       }
 
-      await downloadWinnersImage({
+      const asset = await createWinnerImageAsset({
         rows: winners,
         selectedDate,
         drawName,
@@ -200,6 +217,9 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
         logoImageSrc,
         fileNamePrefix: `${safeGameType.toLowerCase()}_${drawName.toLowerCase().replace(/\s+/g, "_")}_winners`,
       });
+
+      setPreviewAsset(asset);
+      setPreviewTitle(`${drawName} Winners Preview`);
     } catch (error) {
       const message =
         error instanceof Error
@@ -417,6 +437,15 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
           );
         })}
       </div>
+
+      <WinnerImagePreviewModal
+        isOpen={Boolean(previewAsset)}
+        title={previewTitle}
+        imageUrl={previewAsset?.imageUrl ?? ""}
+        fileName={previewAsset?.fileName ?? ""}
+        onClose={closePreview}
+        onDownload={() => previewAsset?.download()}
+      />
     </div>
   );
 };

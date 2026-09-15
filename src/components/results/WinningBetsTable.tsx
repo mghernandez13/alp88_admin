@@ -1,6 +1,6 @@
 import type React from "react";
 import Input from "../generic/Input";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { DrawResultsLogsQueryData, Bets } from "../../types/api";
 import { useParams } from "react-router-dom";
 import Skeleton from "../generic/Skeleton";
@@ -11,6 +11,10 @@ import { Eye, Trash2 } from "lucide-react";
 import Swal from "sweetalert2";
 import IconTableActionButton from "../generic/buttons/IconTableActionButton";
 import { isRambolito3 } from "../../utils/bets";
+import {
+  getTwoDSpecialWinnerContext,
+  getTwoDSpecialWinnerLabel,
+} from "../../utils/winners";
 
 interface WinningBetsTableProps {
   lottoTypeId: string;
@@ -84,8 +88,12 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
   const [allWinningBets, setAllWinningBets] = useState<WinningBetViewItem[]>(
     [],
   );
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [twoDSpecialContext, setTwoDSpecialContext] = useState<Awaited<
+    ReturnType<typeof getTwoDSpecialWinnerContext>
+  > | null>(null);
 
   const columns = [
     { name: "Details", field: "details" },
@@ -123,8 +131,24 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
             ? "Rambolito 3"
             : "Rambolito 6"
           : (bet.bet_types?.name ?? "");
+
+      const twoDLabel =
+        bet.lotto_types?.game_type?.toUpperCase() === "2D"
+          ? getTwoDSpecialWinnerLabel(
+              twoDSpecialContext,
+              combinationText,
+              bet.bet_types?.code ?? "",
+            )
+          : null;
+
+      const twoDHitSuffix = twoDLabel
+        ? twoDLabel.includes("MONTHLY BRACKET")
+          ? "Monthly Bracket"
+          : "Petsada"
+        : null;
+
       const hitLabel = bet.hit
-        ? `${bet.is_return_bet ? "RETURN BET" : bet.is_super_jackpot ? "SUPER JACKPOT" : "JACKPOT"} - ${isTrio ? "Trio" : betTypeLabel || "Normal Bet"}`
+        ? `${bet.is_return_bet ? "RETURN BET" : bet.is_super_jackpot ? "X3 SUPER JACKPOT" : "JACKPOT"} - ${twoDHitSuffix || (isTrio ? "Trio" : betTypeLabel || "Normal Bet")}`
         : "-";
       const prizeLabel = bet.prize_amount
         ? `PHP ${formatCurrency(bet.prize_amount)}`
@@ -171,8 +195,40 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
         searchText,
       };
     },
-    [winningCombination],
+    [twoDSpecialContext, winningCombination],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadTwoDSpecialContext = async () => {
+      if (!drawDate || !winningCombination) {
+        setTwoDSpecialContext(null);
+        return;
+      }
+
+      try {
+        const context = await getTwoDSpecialWinnerContext(
+          drawDate,
+          winningCombination,
+        );
+
+        if (!cancelled) {
+          setTwoDSpecialContext(context);
+        }
+      } catch {
+        if (!cancelled) {
+          setTwoDSpecialContext(null);
+        }
+      }
+    };
+
+    void loadTwoDSpecialContext();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [drawDate, winningCombination]);
 
   const handleDeleteDummyBet = useCallback(async (betId: string) => {
     const confirm = await Swal.fire({
@@ -214,7 +270,7 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
     setLoading(true);
     setLoadError(null);
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("bets")
       .select(
         `
@@ -232,6 +288,7 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
           is_return_bet,
           created_at
         `,
+        { count: "exact" },
       )
       .eq("lotto_type_id", lottoTypeId)
       .eq("hit", true)
@@ -240,47 +297,62 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
       .lte("created_at", `${drawDate}T23:59:59.999`)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      setLoadError(error.message);
+    const trimmedSearch = debouncedSearch.trim();
+    if (trimmedSearch) {
+      const escapedSearch = trimmedSearch
+        .replace(/[%_]/g, "\\$&")
+        .replace(/[(),]/g, "");
+      const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        trimmedSearch,
+      );
+
+      const searchFilter = looksLikeUuid
+        ? `id.eq.${trimmedSearch},combination.ilike.%${escapedSearch}%,bettor_name.ilike.%${escapedSearch}%`
+        : `combination.ilike.%${escapedSearch}%,bettor_name.ilike.%${escapedSearch}%`;
+
+      query = query.or(searchFilter);
+    }
+
+    const {
+      data: pageData,
+      count,
+      error: pageError,
+    } = await query.range((page - 1) * pageSize, page * pageSize - 1);
+
+    if (pageError) {
+      setLoadError(pageError.message);
       setAllWinningBets([]);
+      setTotalCount(0);
       setLoading(false);
       return;
     }
 
-    const rows = ((data ?? []) as unknown as WinningBetRow[]).map((bet) => ({
-      ...bet,
-      lotto_types: normalizeRelation(bet.lotto_types) ?? {
-        id: lottoTypeId,
-        game_type: "",
-        draw_time: "",
-        name: "",
-      },
-      bet_types: normalizeRelation(bet.bet_types) ?? {
-        id: "",
-        draw_time: "",
-        name: "Normal Bet",
-        code: "",
-      },
-      profiles: normalizeRelation(bet.profiles) ?? { full_name: "-" },
-    })) as WinningBetListItem[];
+    const rows = ((pageData ?? []) as unknown as WinningBetRow[]).map(
+      (bet) => ({
+        ...bet,
+        lotto_types: normalizeRelation(bet.lotto_types) ?? {
+          id: lottoTypeId,
+          game_type: "",
+          draw_time: "",
+          name: "",
+        },
+        bet_types: normalizeRelation(bet.bet_types) ?? {
+          id: "",
+          draw_time: "",
+          name: "Normal Bet",
+          code: "",
+        },
+        profiles: normalizeRelation(bet.profiles) ?? { full_name: "-" },
+      }),
+    ) as WinningBetListItem[];
 
     setAllWinningBets(rows.map(buildWinningBetViewItem));
+    setTotalCount(count ?? 0);
     setLoading(false);
-  }, [buildWinningBetViewItem, drawDate, lottoTypeId]);
+  }, [buildWinningBetViewItem, debouncedSearch, drawDate, lottoTypeId, page]);
 
-  const filteredWinningBets = useMemo(() => {
-    const term = debouncedSearch.trim().toLowerCase();
-    if (!term) return allWinningBets;
-
-    return allWinningBets.filter((bet) => bet.searchText.includes(term));
-  }, [allWinningBets, debouncedSearch]);
-
-  const totalCount = filteredWinningBets.length;
   const totalPages = Math.ceil(totalCount / pageSize);
-  const winningBets = filteredWinningBets.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  );
+  const winningBets = allWinningBets;
 
   // Reset to page 1 when search changes
   useEffect(() => {
