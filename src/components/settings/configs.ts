@@ -136,4 +136,10 @@ export const otherConfigs = [
     ],
     isActive: false,
   },
+  {
+    title: "Bet Entry",
+    key: "bet_entry",
+    fields: [],
+    isActive: true,
+  },
 ];
