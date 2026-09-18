@@ -114,6 +114,28 @@ const isValidDateString = (value: string) => {
   );
 };
 
+const sortProfilesByName = (profiles: ProfileRow[]) =>
+  [...profiles].sort((a, b) => {
+    const normalize = (value: string | null | undefined) =>
+      (value ?? "").trim().toLowerCase();
+    const isSuperAdmin = (profile: ProfileRow) =>
+      profile.email === SUPER_ADMIN_EMAIL ||
+      normalize(profile.full_name) === "super admin";
+
+    const aIsSuper = isSuperAdmin(a);
+    const bIsSuper = isSuperAdmin(b);
+
+    if (aIsSuper !== bIsSuper) {
+      return aIsSuper ? -1 : 1;
+    }
+
+    const aName = normalize(a.full_name);
+    const bName = normalize(b.full_name);
+
+    if (aName === bName) return 0;
+    return aName.localeCompare(bName);
+  });
+
 const aggregateBets = (bets: BetRow[]): AggregatedBetsResponse => {
   const result: AggregatedBetsResponse = {
     remittances: {
@@ -438,6 +460,8 @@ Deno.serve(async (req: Request) => {
       ];
     }
 
+    headAdmins = sortProfilesByName(headAdmins);
+
     const getAllDescendantsForHeadAdmin = (headAdminId: string) => {
       const children = agents.filter((agent) => agent.upline === headAdminId);
       const descendants: ProfileRow[] = [];
@@ -460,7 +484,9 @@ Deno.serve(async (req: Request) => {
 
     const rows = headAdmins.flatMap<AgentSummaryRow>((headAdmin) => {
       const headAdminStats = aggregateBets(betsByAgent[headAdmin.id] ?? []);
-      const descendants = getAllDescendantsForHeadAdmin(headAdmin.id);
+      const descendants = sortProfilesByName(
+        getAllDescendantsForHeadAdmin(headAdmin.id),
+      );
 
       if (headAdmin.id === userId) {
         return [{ type: "headAdmin", headAdmin, stats: headAdminStats }];

@@ -5,6 +5,7 @@ import type {
   LottoQueryData,
   LottoQueryVariables,
 } from "../../types/api";
+import { SUPER_ADMIN_EMAIL } from "../../types/constants";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../db/supabase";
 import LoadingSpinner from "../LoadingSpinner";
@@ -195,18 +196,54 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
   const selectedLottoType =
     lottoTypesData?.lotto_typesCollection?.edges?.[0]?.node;
 
+  const compareAgentProfiles = (
+    a: { full_name?: string | null; email?: string | null } | undefined,
+    b: { full_name?: string | null; email?: string | null } | undefined,
+  ) => {
+    const normalize = (value?: string | null) =>
+      (value ?? "").trim().toLowerCase();
+    const isSuperAdmin = (profile?: {
+      full_name?: string | null;
+      email?: string | null;
+    }) =>
+      profile?.email === SUPER_ADMIN_EMAIL ||
+      normalize(profile?.full_name) === "super admin";
+
+    const aIsSuper = isSuperAdmin(a);
+    const bIsSuper = isSuperAdmin(b);
+
+    if (aIsSuper !== bIsSuper) {
+      return aIsSuper ? -1 : 1;
+    }
+
+    const aName = normalize(a?.full_name);
+    const bName = normalize(b?.full_name);
+
+    if (aName === bName) return 0;
+    return aName.localeCompare(bName);
+  };
+
   const groups = useMemo(
     () =>
-      (agentRows as unknown as EdgeRow[]).reduce<
-        Array<{ headAdmin: EdgeRow; admins: EdgeRow[] }>
-      >((acc, row) => {
-        if (row.type === "headAdmin") {
-          acc.push({ headAdmin: row, admins: [] });
-        } else if (row.type === "admin" && acc.length > 0) {
-          acc[acc.length - 1].admins.push(row);
-        }
-        return acc;
-      }, []),
+      (agentRows as unknown as EdgeRow[])
+        .reduce<Array<{ headAdmin: EdgeRow; admins: EdgeRow[] }>>(
+          (acc, row) => {
+            if (row.type === "headAdmin") {
+              acc.push({ headAdmin: row, admins: [] });
+            } else if (row.type === "admin" && acc.length > 0) {
+              acc[acc.length - 1].admins.push(row);
+            }
+            return acc;
+          },
+          [],
+        )
+        .map((group) => ({
+          ...group,
+          admins: [...group.admins].sort((a, b) =>
+            compareAgentProfiles(a.admin, b.admin),
+          ),
+        }))
+        .sort((a, b) => compareAgentProfiles(a.headAdmin.headAdmin, b.headAdmin.headAdmin)),
     [agentRows],
   );
 
@@ -361,7 +398,12 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
 
     if (grandTotalStats) {
       exportRows.push(
-        toExportRow("GRAND TOTAL OVERALL", "", null, grandTotalStats),
+        toExportRow("GRAND TOTAL OVERALL", "", 60, grandTotalStats, {
+          remittanceAllOverride: getRemittanceAmountFromPercent(
+            grandTotalStats.overallTotal,
+            60,
+          ),
+        }),
       );
     }
 
@@ -679,9 +721,14 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
                   GRAND TOTAL OVERALL
                 </td>
                 <td className="px-4 py-2">{fmt(grandTotalStats.overallTotal)}</td>
-                <td className="px-4 py-2">-</td>
+                <td className="px-4 py-2">{pct(60)}</td>
                 <td className={"px-2 py-2 whitespace-nowrap"}>
-                  {fmt(grandTotalStats.remittances.total.amount)}
+                  {fmt(
+                    getRemittanceAmountFromPercent(
+                      grandTotalStats.overallTotal,
+                      60,
+                    ),
+                  )}
                 </td>
                 <td className={"px-2 py-2 whitespace-nowrap"}>
                   {fmt(grandTotalStats.remittances.lp3.amount)}
