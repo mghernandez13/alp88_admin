@@ -43,6 +43,7 @@ type AgentHierarchyProfile = {
   id: string;
   full_name: string | null;
   upline: string | null;
+  remittance_percent: number | null;
 };
 
 type EdgeRow = {
@@ -255,6 +256,13 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
     );
   }, [groups]);
 
+  const loggedInUserRemittancePercent = useMemo(
+    () =>
+      agentHierarchyProfiles.find((profile) => profile.id === userId)
+        ?.remittance_percent ?? 60,
+    [agentHierarchyProfiles, userId],
+  );
+
   // Depth relative to the team's head admin: 1 = Admin, 2 = Level 1, 3+ = Level 2.
   const getAgentDepth = (
     profileId: string | null | undefined,
@@ -398,12 +406,18 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
 
     if (grandTotalStats) {
       exportRows.push(
-        toExportRow("GRAND TOTAL OVERALL", "", 60, grandTotalStats, {
-          remittanceAllOverride: getRemittanceAmountFromPercent(
-            grandTotalStats.overallTotal,
-            60,
-          ),
-        }),
+        toExportRow(
+          "GRAND TOTAL OVERALL",
+          "",
+          loggedInUserRemittancePercent,
+          grandTotalStats,
+          {
+            remittanceAllOverride: getRemittanceAmountFromPercent(
+              grandTotalStats.overallTotal,
+              loggedInUserRemittancePercent,
+            ),
+          },
+        ),
       );
     }
 
@@ -461,7 +475,7 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
     const loadHierarchyProfiles = async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, upline, is_archive")
+        .select("id, full_name, upline, remittance_percent, is_archive")
         .eq("is_archive", false)
         .order("created_at", { ascending: false });
 
@@ -721,12 +735,14 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
                   GRAND TOTAL OVERALL
                 </td>
                 <td className="px-4 py-2">{fmt(grandTotalStats.overallTotal)}</td>
-                <td className="px-4 py-2">{pct(60)}</td>
+                <td className="px-4 py-2">
+                  {pct(loggedInUserRemittancePercent)}
+                </td>
                 <td className={"px-2 py-2 whitespace-nowrap"}>
                   {fmt(
                     getRemittanceAmountFromPercent(
                       grandTotalStats.overallTotal,
-                      60,
+                      loggedInUserRemittancePercent,
                     ),
                   )}
                 </td>
