@@ -142,25 +142,114 @@ Deno.serve(async (req) => {
           .gte("created_at", startDate)
           .lte("created_at", endDate);
 
-        const { data: allBets, error: betsError } = await supabase
-          .from("bets")
+        // Fetch in pages so draws with more bets than PostgREST's default row cap
+        // still have every bet evaluated for a win, not just the first page.
+        const allBets = [];
+        let betsOffset = 0;
+        const BETS_BATCH_SIZE = 1000;
+
+        while (true) {
+          const { data: betsPage, error: betsError } = await supabase
+            .from("bets")
+            .select("*, bet_types(id, name, code)")
+            .eq("lotto_type_id", lottoTypeId)
+            .eq("bet_status", "completed")
+            .eq("is_archive", false)
+            .gte("created_at", startDate)
+            .lte("created_at", endDate)
+            .order("id", { ascending: true })
+            .range(betsOffset, betsOffset + BETS_BATCH_SIZE - 1);
+
+          if (betsError) {
+            return new Response(
+              JSON.stringify({
+                error: `Error fetching bets for lottoTypeId ${lottoTypeId} and draw date ${resultDrawDate}`,
+              }),
+              {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              },
+            );
+          }
+
+          if (!betsPage || betsPage.length === 0) {
+            break;
+          }
+
+          allBets.push(...betsPage);
+
+          if (betsPage.length < BETS_BATCH_SIZE) {
+            break;
+          }
+
+          betsOffset += BETS_BATCH_SIZE;
+        }
+
+        // Prefetch lookup data ONCE per draw instead of per bet to avoid the
+        // N+1 query pattern that previously blew the function's CPU time budget.
+        const { data: betPrizesData, error: betPrizesError } = await supabase
+          .from("bet_prizes")
           .select("*, bet_types(id, name, code)")
           .eq("lotto_type_id", lottoTypeId)
-          .eq("bet_status", "completed")
-          .eq("is_archive", false)
-          .gte("created_at", startDate)
-          .lte("created_at", endDate);
+          .eq("is_active", true)
+          .eq("is_archive", false);
 
-        if (betsError) {
-          return new Response(
-            JSON.stringify({
-              error: `Error fetching bets for lottoTypeId ${lottoTypeId} and draw date ${resultDrawDate}`,
-            }),
-            {
-              status: 500,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            },
+        if (betPrizesError) {
+          console.error(
+            `Error fetching bet prizes for lottoTypeId: ${lottoTypeId}:`,
+            betPrizesError,
           );
+        }
+
+        // Keyed by bet_type_id + amount for typed bets, and by amount alone for
+        // fb/rb bets (which never filtered by bet_type_id in the original query).
+        const betPrizeByTypeAndAmount = new Map();
+        const betPrizeByAmountOnly = new Map();
+        for (const row of betPrizesData ?? []) {
+          const typeKey = `${row.bet_type_id ?? "null"}_${row.bet_amount}`;
+          const prevTyped = betPrizeByTypeAndAmount.get(typeKey);
+          if (
+            !prevTyped ||
+            (row.updated_at ?? "") > (prevTyped.updated_at ?? "")
+          ) {
+            betPrizeByTypeAndAmount.set(typeKey, row);
+          }
+
+          const amountKey = String(row.bet_amount);
+          const prevAmount = betPrizeByAmountOnly.get(amountKey);
+          if (
+            !prevAmount ||
+            (row.updated_at ?? "") > (prevAmount.updated_at ?? "")
+          ) {
+            betPrizeByAmountOnly.set(amountKey, row);
+          }
+        }
+
+        let trioBetTypeId = null;
+        if (gameType === "3D") {
+          const { data: betTypeTrioData, error: betTypeTrioError } =
+            await supabase
+              .from("bet_types")
+              .select("*")
+              .eq("game_type", "3D")
+              .eq("code", "T")
+              .eq("is_active", true)
+              .eq("is_archive", false);
+
+          if (betTypeTrioError) {
+            console.error(
+              `Error fetching Trio bet type for lottoTypeId: ${lottoTypeId}:`,
+              betTypeTrioError,
+            );
+          } else {
+            trioBetTypeId = betTypeTrioData?.[0]?.id ?? null;
+          }
+        }
+
+        let settingsData = null;
+        if (gameType === "2D") {
+          const { data } = await supabase.from("settings").select("*");
+          settingsData = data;
         }
 
         // Process bets for super_jackpot, return_bet, and classic match
@@ -174,34 +263,15 @@ Deno.serve(async (req) => {
                 ? 10
                 : Number(bet.bet_amount || 0);
             const betTypeCode = bet.bet_types?.code;
-            let betPrizeQuery = supabase
-              .from("bet_prizes")
-              .select("*, bet_types(id, name, code)")
-              .eq("lotto_type_id", lottoTypeId)
-              .eq("bet_amount", betAmount)
-              .eq("is_active", true)
-              .eq("is_archive", false);
 
-            if (
+            const betPrizeData =
               bet.bet_types?.id &&
               betTypeCode?.toLowerCase() !== "fb" &&
               betTypeCode?.toLowerCase() !== "rb"
-            ) {
-              betPrizeQuery = betPrizeQuery.eq(
-                "bet_type_id",
-                bet.bet_types?.id,
-              );
-            }
-
-            const { data: betPrizeData, error: betPrizeError } =
-              await betPrizeQuery.maybeSingle();
-
-            if (betPrizeError) {
-              console.error(
-                `Error fetching bet prize for lottoTypeId: ${lottoTypeId}, bet code: ${betTypeCode} and bet amount: ${betAmount}:`,
-                betPrizeError,
-              );
-            }
+                ? (betPrizeByTypeAndAmount.get(
+                    `${bet.bet_types.id}_${betAmount}`,
+                  ) ?? null)
+                : (betPrizeByAmountOnly.get(String(betAmount)) ?? null);
 
             let prizeAmount = 0;
             const betNumbers = splitAndNormalizeNumbers(bet.combination);
@@ -289,6 +359,7 @@ Deno.serve(async (req) => {
                 continue;
               }
             } else if (gameType === "3D") {
+              let isWinner = false;
               if (betTypeCode?.toLowerCase() === "s") {
                 const isStraight =
                   betNumbers[0] === resultNumbers[0] &&
@@ -303,39 +374,15 @@ Deno.serve(async (req) => {
                     [...resultNumbers].sort().join("-");
 
                 if (isTrioWinner) {
-                  const { data: betTypeTrioData, error: betTypeTrioError } =
-                    await supabase
-                      .from("bet_types")
-                      .select("*")
-                      .eq("game_type", "3D")
-                      .eq("code", "T")
-                      .eq("is_active", true)
-                      .eq("is_archive", false);
-
-                  if (!betTypeTrioError) {
-                    const { data: betPrizeTrioData, error: betPrizeTrioError } =
-                      await supabase
-                        .from("bet_prizes")
-                        .select("*, bet_types(id, name, code)")
-                        .eq("lotto_type_id", lottoTypeId)
-                        .eq("bet_amount", betAmount)
-                        .eq("bet_type_id", betTypeTrioData?.[0]?.id)
-                        .eq("is_active", true)
-                        .eq("is_archive", false)
-                        .maybeSingle();
-
-                    if (betPrizeTrioError) {
-                      console.error(
-                        `Error fetching bet prize for lottoTypeId: ${lottoTypeId}, bet code: ${betTypeTrioData?.[0]?.code} and bet amount: ${betAmount}:`,
-                        betPrizeTrioError,
-                      );
-                    } else {
-                      prizeAmount = betPrizeTrioData
-                        ? betPrizeTrioData.prize
-                        : 0;
-                    }
-                  }
+                  isWinner = true;
+                  const trioBetPrize = trioBetTypeId
+                    ? (betPrizeByTypeAndAmount.get(
+                        `${trioBetTypeId}_${betAmount}`,
+                      ) ?? null)
+                    : null;
+                  prizeAmount = trioBetPrize ? trioBetPrize.prize : 0;
                 } else if (isStraight) {
+                  isWinner = true;
                   prizeAmount = betPrizeData ? betPrizeData.prize : 0;
                 }
               } else if (betTypeCode?.toLowerCase() === "r") {
@@ -344,6 +391,7 @@ Deno.serve(async (req) => {
                   resultNumbers,
                 );
                 if (isRambolitoWinner) {
+                  isWinner = true;
                   const counts = betNumbers.reduce((acc, n) => {
                     acc[n] = (acc[n] || 0) + 1;
                     return acc;
@@ -366,11 +414,12 @@ Deno.serve(async (req) => {
                   [...betNumbers].sort().join("-") ===
                     [...resultNumbers].sort().join("-");
                 if (isTrioWinner) {
+                  isWinner = true;
                   prizeAmount = betPrizeData ? betPrizeData.prize : 0;
                 }
               }
 
-              if (prizeAmount > 0) {
+              if (isWinner) {
                 await supabase
                   .from("bets")
                   .update({
@@ -412,10 +461,6 @@ Deno.serve(async (req) => {
                 day: "numeric",
               }).format(new Date(date.getTime() + 24 * 60 * 60 * 1000)); // Add one day
 
-              const { data: settingsData } = await supabase
-                .from("settings")
-                .select("*");
-
               const twoDPetsadaIsActive =
                 settingsData?.find(
                   (setting) => setting.name === "2d_petsada_prize_is_active",
@@ -436,6 +481,8 @@ Deno.serve(async (req) => {
               const isMonthlyBracket =
                 twoDMonthlyBracketIsActive &&
                 resultNumbers.includes(monthNumericToday);
+
+              let isWinner = false;
 
               if (isPetsada) {
                 const twoDPetsadaPrizePerTenStraight = Number(
@@ -465,6 +512,7 @@ Deno.serve(async (req) => {
                     betNumbers[1] === resultNumbers[1];
 
                   if (isStraightWinner) {
+                    isWinner = true;
                     prizeAmount =
                       Math.floor(bet.bet_amount / 10) * prizeAmountPerTen;
                   }
@@ -474,6 +522,7 @@ Deno.serve(async (req) => {
                     resultNumbers,
                   );
                   if (isRambleWinner) {
+                    isWinner = true;
                     prizeAmount =
                       Math.floor(bet.bet_amount / 10) * prizeAmountPerTen;
                   }
@@ -508,6 +557,7 @@ Deno.serve(async (req) => {
                     betNumbers[1] === resultNumbers[1];
 
                   if (isStraightWinner) {
+                    isWinner = true;
                     prizeAmount =
                       Math.floor(bet.bet_amount / 10) * prizeAmountPerTen;
                   }
@@ -518,6 +568,7 @@ Deno.serve(async (req) => {
                   );
 
                   if (isRambleWinner) {
+                    isWinner = true;
                     prizeAmount =
                       Math.floor(bet.bet_amount / 10) * prizeAmountPerTen;
                   }
@@ -539,6 +590,7 @@ Deno.serve(async (req) => {
                     isStraightWinner;
 
                   if (isBetPompyang) {
+                    isWinner = true;
                     const twoDPompyangPrizePerTen = Number(
                       settingsData?.find(
                         (setting) =>
@@ -548,6 +600,7 @@ Deno.serve(async (req) => {
                     prizeAmount =
                       Math.floor(bet.bet_amount / 10) * twoDPompyangPrizePerTen;
                   } else if (isStraightWinner) {
+                    isWinner = true;
                     prizeAmount = betPrizeData ? betPrizeData.prize : 0;
                   }
                 } else if (betTypeCode?.toLowerCase() === "r") {
@@ -556,12 +609,13 @@ Deno.serve(async (req) => {
                     resultNumbers,
                   );
                   if (isRambolito) {
+                    isWinner = true;
                     prizeAmount = betPrizeData ? betPrizeData.prize : 0;
                   }
                 }
               }
 
-              if (prizeAmount > 0) {
+              if (isWinner) {
                 await supabase
                   .from("bets")
                   .update({

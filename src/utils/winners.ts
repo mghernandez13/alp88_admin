@@ -558,7 +558,13 @@ export const mapWinnerRows = (
       remarks,
       prize: prizeAmount,
     };
-  });
+  })
+    // Group by admin, then alphabetize bettor names within each admin group.
+    .sort(
+      (a, b) =>
+        a.admin.localeCompare(b.admin) ||
+        a.bettorName.localeCompare(b.bettorName),
+    );
 };
 
 export const fetchWinnerRows = async ({

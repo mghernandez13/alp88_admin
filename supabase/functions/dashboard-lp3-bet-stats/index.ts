@@ -165,6 +165,7 @@ Deno.serve(async (req: Request) => {
         .eq("is_archive", false)
         .gte("created_at", `${startDate}T00:00:00+08:00`)
         .lte("created_at", `${endDate}T23:59:59+08:00`)
+        .order("id", { ascending: true })
         .range(offset, offset + BATCH_SIZE - 1);
       if (startDate === endDate) {
         console.log("bets", bets);

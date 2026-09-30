@@ -410,6 +410,7 @@ Deno.serve(async (req: Request) => {
         .gte("created_at", `${date}T00:00:00+08:00`)
         .lt("created_at", `${date}T23:59:59+08:00`)
         .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
         .range(offset, offset + BATCH_SIZE - 1);
 
       if (betsError) {
