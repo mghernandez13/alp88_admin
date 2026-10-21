@@ -95,12 +95,12 @@ export const otherConfigs = [
     key: "2d_monthly_bracket_prize",
     fields: [
       {
-        label: "2D Straight - Prize per 10 pesos",
+        label: "2D Straight - Prize per 5 pesos",
         key: "2d_monthly_bracket_prize_per_ten_straight",
         value: "",
       },
       {
-        label: "2D Ramble - Prize per 10 pesos",
+        label: "2D Ramble - Prize per 5 pesos",
         key: "2d_monthly_bracket_prize_per_ten_ramble",
         value: "",
       },
@@ -112,12 +112,12 @@ export const otherConfigs = [
     key: "2d_petsada_prize",
     fields: [
       {
-        label: "2D Straight - Prize per 10 pesos",
+        label: "2D Straight - Prize per 5 pesos",
         key: "2d_petsada_prize_per_ten_straight",
         value: "",
       },
       {
-        label: "2D Ramble - Prize per 10 pesos",
+        label: "2D Ramble - Prize per 5 pesos",
         key: "2d_petsada_prize_per_ten_ramble",
         value: "",
       },
@@ -129,7 +129,7 @@ export const otherConfigs = [
     key: "2d_pompyang",
     fields: [
       {
-        label: "2D - Prize per 10 pesos",
+        label: "2D - Prize per 5 pesos",
         key: "2d_pompyang_prize_per_ten",
         value: "",
       },

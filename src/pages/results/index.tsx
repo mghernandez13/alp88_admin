@@ -1,11 +1,12 @@
 import { useQuery } from "@apollo/client/react";
 import DataTable from "../../components/generic/table";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GET_RESULTS } from "../../graphql/queries/results";
-import { GET_LOTTO_TYPES } from "../../graphql/queries/lotto";
-import type { LottoQueryData, LottoQueryVariables } from "../../types/api";
+import { GET_RESULT_LOTTO_TYPES } from "../../graphql/queries/lotto";
+import type { LottoQueryVariables } from "../../types/api";
 import type {
+  ResultLottoTypesQueryData,
   ResultsQueryData,
   ResultsQueryVariables,
 } from "../../types/results";
@@ -29,9 +30,13 @@ const ResultsPage: React.FC = () => {
   const [selectedResult] = useState<
     ResultsQueryData["draw_resultsCollection"]["edges"][number]["node"] | null
   >(null);
-  const [sortVariable, setSortVariable] = useState<Record<string, string>[]>([
-    { created_at: "DescNullsFirst" },
-  ]);
+  const sortVariable = useMemo(
+    () => [
+      { [sortConfig.column]: sortConfig.direction },
+      { id: "DescNullsLast" },
+    ],
+    [sortConfig],
+  );
   const [selectedDrawTypeFilter, setSelectedDrawTypeFilter] = useState<
     string[]
   >([]);
@@ -41,29 +46,58 @@ const ResultsPage: React.FC = () => {
     return searchQuery ? `%${searchQuery}%` : "%";
   }, [searchQuery]);
 
-  const { data: lottoTypesData } = useQuery<
-    LottoQueryData,
-    LottoQueryVariables
-  >(GET_LOTTO_TYPES, {
-    variables: {
-      first: 100,
-      offset: 0,
-      filter: { is_archive: { eq: false } },
-      sortOrder: [{ name: "AscNullsFirst" }],
+  const lookupOffset = useRef(-1);
+  const {
+    data: lottoTypesData,
+    loading: lottoTypesLoading,
+    fetchMore: fetchMoreLottoTypes,
+  } = useQuery<ResultLottoTypesQueryData, LottoQueryVariables>(
+    GET_RESULT_LOTTO_TYPES,
+    {
+      variables: {
+        first: 100,
+        offset: 0,
+        filter: { is_archive: { eq: false } },
+        sortOrder: [{ name: "AscNullsFirst" }, { id: "AscNullsFirst" }],
+      },
+      fetchPolicy: "network-only",
     },
-    fetchPolicy: "network-only",
-  });
+  );
+
+  useEffect(() => {
+    const collection = lottoTypesData?.lotto_typesCollection;
+    if (lottoTypesLoading || !collection?.pageInfo.hasNextPage) return;
+    const nextOffset = collection.edges.length;
+    if (lookupOffset.current === nextOffset) return;
+    lookupOffset.current = nextOffset;
+    void fetchMoreLottoTypes({
+      variables: { offset: nextOffset },
+      updateQuery: (previous, { fetchMoreResult }) => ({
+        lotto_typesCollection: {
+          ...fetchMoreResult.lotto_typesCollection,
+          edges: [
+            ...previous.lotto_typesCollection.edges,
+            ...fetchMoreResult.lotto_typesCollection.edges,
+          ],
+        },
+      }),
+    }).catch((lookupError: unknown) => {
+      console.error("Failed to load additional draw types", lookupError);
+    });
+  }, [lottoTypesData, lottoTypesLoading, fetchMoreLottoTypes]);
 
   const filterObj = useMemo((): ResultsQueryVariables["filter"] => {
     const baseFilter: Record<string, unknown> = {
       is_archive: { eq: false },
-      combination: { ilike: searchTerm },
     };
+    if (searchQuery) {
+      baseFilter.combination = { ilike: searchTerm };
+    }
     if (selectedDrawTypeFilter.length > 0) {
       baseFilter.draw_type = { in: selectedDrawTypeFilter };
     }
     return baseFilter;
-  }, [searchTerm, selectedDrawTypeFilter]);
+  }, [searchQuery, searchTerm, selectedDrawTypeFilter]);
 
   const { data, loading, error } = useQuery<
     ResultsQueryData,
@@ -91,11 +125,35 @@ const ResultsPage: React.FC = () => {
     );
   }, [lottoTypesData]);
 
+  const resetPage = useCallback(() => {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous);
+      next.set("page", "1");
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const handleDrawTypeFilterChange = useCallback(
+    (value: React.SetStateAction<string[]>) => {
+      setSelectedDrawTypeFilter(value);
+      resetPage();
+    },
+    [resetPage],
+  );
+
+  const handlePageSizeChange = useCallback(
+    (value: React.SetStateAction<number>) => {
+      setPageSize(value);
+      resetPage();
+    },
+    [resetPage],
+  );
+
   const tableFilter = {
     drawType: {
       label: "Draw Type",
       selectedFilter: selectedDrawTypeFilter,
-      setSelectedFilter: setSelectedDrawTypeFilter,
+      setSelectedFilter: handleDrawTypeFilterChange,
       data: drawTypeFilterData,
     },
   };
@@ -110,8 +168,9 @@ const ResultsPage: React.FC = () => {
         direction = "DescNullsLast";
       }
       setSortConfig({ column: columnName, direction });
+      resetPage();
     },
-    [sortConfig.column, sortConfig.direction],
+    [sortConfig.column, sortConfig.direction, resetPage],
   );
 
   const handleViewDetails = useCallback(
@@ -210,22 +269,17 @@ const ResultsPage: React.FC = () => {
                 <Eye className="w-5 h-5" />
               </a>
               <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                   View Summary
                 </span>
-                <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
               </div>
             </div>
           </td>
         ),
       };
     });
-  }, [data?.draw_resultsCollection?.edges, handleViewDetails, lottoTypeMap]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSortVariable([{ [sortConfig.column]: sortConfig.direction }]);
-  }, [sortConfig]);
+  }, [data?.draw_resultsCollection?.edges, handleViewDetails]);
 
   const totalCount = data?.draw_resultsCollection?.totalCount ?? 0;
 
@@ -259,7 +313,7 @@ const ResultsPage: React.FC = () => {
             data?.draw_resultsCollection?.pageInfo?.hasNextPage ?? false
           }
           pageSize={pageSize}
-          setPageSize={setPageSize}
+          setPageSize={handlePageSizeChange}
           bulkAction={false}
           onDeleteSelected={() => {}}
         />

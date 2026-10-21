@@ -7,7 +7,7 @@ const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({
   return (
     <div className="relative">
       <select
-        className="bg-[#16191d] border border-gray-600 text-white w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none appearance-none cursor-pointer"
+        className="bg-white dark:bg-[#16191d] border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none appearance-none cursor-pointer"
         {...props}
       >
         {children}

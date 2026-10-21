@@ -2,7 +2,7 @@ import PrimaryButton from "../generic/buttons/Primary";
 import TertiaryButton from "../generic/buttons/Tertiary";
 import { useQuery } from "@apollo/client/react";
 import type { LottoQueryData, LottoQueryVariables } from "../../types/api";
-import { GET_LOTTO_TYPES } from "../../graphql/queries/lotto";
+import { GET_LOTTO_TYPE_OPTIONS } from "../../graphql/queries/lotto";
 import { getDayNameFromDateString } from "../../utils/datetime";
 import { useEffect, useState } from "react";
 import { supabase } from "../../db/supabase";
@@ -17,6 +17,7 @@ import {
   type WinnerImageAsset,
 } from "../../utils/winners";
 import WinnerImagePreviewModal from "../modals/results/WinnerImagePreviewModal.tsx";
+import { formatCurrency } from "../../utils/currency.ts";
 
 type SummaryResponse = {
   totalBets: number;
@@ -59,7 +60,7 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
   const { data: lottoTypesData, loading: lp3Loading } = useQuery<
     LottoQueryData,
     LottoQueryVariables
-  >(GET_LOTTO_TYPES, {
+  >(GET_LOTTO_TYPE_OPTIONS, {
     variables: {
       first: 1,
       offset: 0,
@@ -348,22 +349,27 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
         fileName={previewAsset?.fileName ?? ""}
         onClose={closePreview}
         onDownload={() => previewAsset?.download()}
+        onDownloadExcel={() => previewAsset?.downloadExcel()}
       />
 
       {/* Summary cards grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-2">
-        <div className="bg-[#222222] rounded-lg p-6 text-center text-white">
-          <div className="text-sm text-gray-400 mb-1">Total Bets</div>
+        <div className="bg-gray-100 dark:bg-[#222222] rounded-lg p-6 text-center text-gray-900 dark:text-white">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Total Bets
+          </div>
           <div className="text-2xl font-bold">
             {lp3Loading || statsLoading ? (
               <Skeleton className="mt-2" width={50} height={40} />
             ) : (
-              summary.totalBets
+              formatCurrency(summary.totalBets, false)
             )}
           </div>
         </div>
-        <div className="bg-[#222222] rounded-lg p-6 text-center text-white">
-          <div className="text-sm text-gray-400 mb-1">Winning Combination</div>
+        <div className="bg-gray-100 dark:bg-[#222222] rounded-lg p-6 text-center text-gray-900 dark:text-white">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Winning Combination
+          </div>
           <div className="text-2xl font-bold">
             {lp3Loading || statsLoading ? (
               <Skeleton className="mt-2" width={50} height={40} />
@@ -372,8 +378,10 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
             )}
           </div>
         </div>
-        <div className="bg-[#222222] rounded-lg p-6 text-center text-white">
-          <div className="text-sm text-gray-400 mb-1">Jackpot Winners</div>
+        <div className="bg-gray-100 dark:bg-[#222222] rounded-lg p-6 text-center text-gray-900 dark:text-white">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Jackpot Winners
+          </div>
           <div className="text-2xl font-bold">
             {lp3Loading || statsLoading ? (
               <Skeleton className="mt-2" width={50} height={40} />
@@ -382,8 +390,10 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
             )}
           </div>
         </div>
-        <div className="bg-[#222222] rounded-lg p-6 text-center text-white">
-          <div className="text-sm text-gray-400 mb-1">RB Winners</div>
+        <div className="bg-gray-100 dark:bg-[#222222] rounded-lg p-6 text-center text-gray-900 dark:text-white">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            RB Winners
+          </div>
           <div className="text-2xl font-bold">
             {lp3Loading || statsLoading ? (
               <Skeleton className="mt-2" width={50} height={40} />
@@ -392,44 +402,52 @@ const Lp3Summary = ({ selectedDate, onReload }: SummaryProps) => {
             )}
           </div>
         </div>
-        <div className="bg-[#222222] rounded-lg p-6 text-center text-white">
-          <div className="text-sm text-gray-400 mb-1">Gross Sales</div>
+        <div className="bg-gray-100 dark:bg-[#222222] rounded-lg p-6 text-center text-gray-900 dark:text-white">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Gross Sales
+          </div>
           <div className="text-2xl font-bold">
             {" "}
             {lp3Loading || statsLoading ? (
               <Skeleton className="mt-2" width={50} height={40} />
             ) : (
-              summary.totalGrossSales
+              formatCurrency(summary.totalGrossSales, false)
             )}
           </div>
         </div>
-        <div className="bg-[#222222] rounded-lg p-6 text-center text-white">
-          <div className="text-sm text-gray-400 mb-1">Net Sales</div>
+        <div className="bg-gray-100 dark:bg-[#222222] rounded-lg p-6 text-center text-gray-900 dark:text-white">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Net Sales
+          </div>
           <div className="text-2xl font-bold">
             {lp3Loading || statsLoading ? (
               <Skeleton className="mt-2" width={50} height={40} />
             ) : (
-              summary.totalNetSales
+              formatCurrency(summary.totalNetSales, false)
             )}
           </div>
         </div>
-        <div className="bg-[#222222] rounded-lg p-6 text-center text-white">
-          <div className="text-sm text-gray-400 mb-1">Total Remittance</div>
+        <div className="bg-gray-100 dark:bg-[#222222] rounded-lg p-6 text-center text-gray-900 dark:text-white">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Total Remittance
+          </div>
           <div className="text-2xl font-bold">
             {lp3Loading || statsLoading ? (
               <Skeleton className="mt-2" width={50} height={40} />
             ) : (
-              summary.totalRemittance
+              formatCurrency(summary.totalRemittance, false)
             )}
           </div>
         </div>
-        <div className="bg-[#222222] rounded-lg p-6 text-center text-white">
-          <div className="text-sm text-gray-400 mb-1">Total Jackpot</div>
+        <div className="bg-gray-100 dark:bg-[#222222] rounded-lg p-6 text-center text-gray-900 dark:text-white">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Total Jackpot
+          </div>
           <div className="text-2xl font-bold">
             {lp3Loading || statsLoading ? (
               <Skeleton className="mt-2" width={50} height={40} />
             ) : (
-              summary.totalJackpotAmount
+              formatCurrency(summary.totalJackpotAmount, false)
             )}
           </div>
         </div>

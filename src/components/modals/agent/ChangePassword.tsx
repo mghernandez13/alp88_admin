@@ -186,12 +186,12 @@ const ChangePasswordModal: React.FC<{
               damping: 25,
               mass: 0.8,
             }}
-            className="relative bg-black border border-gray-700 w-full max-w-md p-8 rounded-lg shadow-2xl z-[70]"
+            className="relative bg-white dark:bg-black border border-gray-200 dark:border-gray-700 w-full max-w-md p-8 rounded-lg shadow-2xl z-[70]"
           >
             <div>
               <button
                 onClick={onClose}
-                className="absolute bg-transparent top-4 right-4 text-white hover:border-none hover:text-gray-600"
+                className="absolute bg-transparent top-4 right-4 text-gray-900 dark:text-white hover:border-none hover:text-gray-600"
               >
                 <X size={20} />
               </button>
@@ -200,7 +200,7 @@ const ChangePasswordModal: React.FC<{
                 <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
                   <KeyRound size={24} />
                 </div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   Change Password
                 </h2>
               </div>

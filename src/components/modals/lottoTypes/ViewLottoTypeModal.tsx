@@ -81,17 +81,17 @@ const ViewLottoTypeModal: React.FC<ViewLottoTypeModalProps> = (props) => {
               damping: 25,
               mass: 0.8,
             }}
-            className="relative bg-black border border-gray-700 w-full max-w-2xl p-8 rounded-lg shadow-2xl z-[70]"
+            className="relative bg-white dark:bg-black border border-gray-200 dark:border-gray-700 w-full max-w-2xl p-8 rounded-lg shadow-2xl z-[70]"
           >
             <div>
               <button
                 onClick={onClose}
-                className="absolute bg-transparent top-4 right-4 text-white hover:border-none hover:text-gray-600"
+                className="absolute bg-transparent top-4 right-4 text-gray-900 dark:text-white hover:border-none hover:text-gray-600"
               >
                 <X size={20} />
               </button>
 
-              <h2 className="text-2xl font-bold text-white mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                 Lotto Type Details
               </h2>
 
@@ -149,8 +149,8 @@ const ViewLottoTypeModal: React.FC<ViewLottoTypeModalProps> = (props) => {
 
                   <div className="flex flex-col gap-2 w-full md:w-1/2">
                     <Label>Active</Label>
-                    <div className="flex items-center h-10 rounded-md border border-gray-600 bg-[#16191d] px-3">
-                      <span className="text-white">
+                    <div className="flex items-center h-10 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#16191d] px-3">
+                      <span className="text-gray-900 dark:text-white">
                         {formData.isActive ? "Yes" : "No"}
                       </span>
                     </div>
@@ -198,16 +198,16 @@ const ViewLottoTypeModal: React.FC<ViewLottoTypeModalProps> = (props) => {
 
                   <div className="flex flex-col gap-2 w-full md:w-1/2">
                     <Label>Days Active</Label>
-                    <div className="grid grid-cols-3 gap-2 p-2 bg-[#16191d] border border-gray-600 rounded-md">
+                    <div className="grid grid-cols-3 gap-2 p-2 bg-gray-50 dark:bg-[#16191d] border border-gray-300 dark:border-gray-600 rounded-md">
                       {DAYS_OF_WEEK.map((day) => (
                         <div key={day} className="flex items-center">
                           <input
                             type="checkbox"
                             checked={formData.daysActive?.includes(day)}
                             disabled={true}
-                            className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600 rounded"
+                            className="w-4 h-4 text-yellow-500 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded"
                           />
-                          <label className="ml-2 text-xs text-gray-300">
+                          <label className="ml-2 text-xs text-gray-700 dark:text-gray-300">
                             {day.substring(0, 3)}
                           </label>
                         </div>

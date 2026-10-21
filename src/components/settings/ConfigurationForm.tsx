@@ -237,8 +237,8 @@ const ConfigurationForm: React.FC = () => {
 
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
-      <div className="bg-black rounded-lg p-8 border border-gray-700">
-        <h2 className="text-lg font-bold mb-6 text-white">
+      <div className="bg-white dark:bg-black rounded-lg p-8 border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-bold mb-6 text-gray-900 dark:text-white">
           Max Bet Per Combination
         </h2>
         <div className="flex flex-col gap-6">
@@ -250,7 +250,7 @@ const ConfigurationForm: React.FC = () => {
                 </div>
                 <div className="flex-col w-2/3 items-center gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="bg-[#222910] text-white px-2 py-1 rounded-l">
+                    <span className="bg-[#f3f6dc] dark:bg-[#222910] text-gray-900 dark:text-white px-2 py-1 rounded-l">
                       PHP
                     </span>
                     <Input
@@ -262,7 +262,9 @@ const ConfigurationForm: React.FC = () => {
                       className="w-32 rounded-l-none"
                     />
                   </div>
-                  <span className="text-xs text-gray-400">{cfg.desc}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    {cfg.desc}
+                  </span>
                 </div>
               </div>
             </div>
@@ -272,9 +274,11 @@ const ConfigurationForm: React.FC = () => {
       {betTimeConfigForm.map((cfg, index) => (
         <div
           key={cfg.name}
-          className="bg-[#232b3b] rounded-lg p-8 border border-gray-700"
+          className="bg-slate-50 dark:bg-[#232b3b] rounded-lg p-8 border border-gray-200 dark:border-gray-700"
         >
-          <h2 className="text-lg font-bold mb-6 text-white">{cfg.label}</h2>
+          <h2 className="text-lg font-bold mb-6 text-gray-900 dark:text-white">
+            {cfg.label}
+          </h2>
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
               <div className="flex w-1/3 items-center gap-2">
@@ -315,7 +319,7 @@ const ConfigurationForm: React.FC = () => {
                 name={`${cfg.name}_is_active`}
                 checked={cfg.isActive}
                 onChange={(e) => handleBetTimeConfigChange(e, index)}
-                className="w-4 h-4 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+                className="w-4 h-4 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
               />
             </div>
           </div>
@@ -324,9 +328,11 @@ const ConfigurationForm: React.FC = () => {
       {otherConfigForm.map((cfg, configIndex) => (
         <div
           key={cfg.key}
-          className="bg-black rounded-lg p-8 border border-gray-700"
+          className="bg-white dark:bg-black rounded-lg p-8 border border-gray-200 dark:border-gray-700"
         >
-          <h2 className="text-lg font-bold mb-6 text-white">{cfg.title}</h2>
+          <h2 className="text-lg font-bold mb-6 text-gray-900 dark:text-white">
+            {cfg.title}
+          </h2>
           {cfg.fields.map((field, fieldIndex) => (
             <div key={field.key} className="flex flex-col gap-6">
               <div className="flex items-center gap-4 mb-5">
@@ -354,7 +360,7 @@ const ConfigurationForm: React.FC = () => {
               name={`${cfg.key}_is_active`}
               checked={cfg.isActive}
               onChange={(e) => handleOtherConfigChange(e, configIndex)}
-              className="w-4 h-4 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+              className="w-4 h-4 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
             />
           </div>
         </div>

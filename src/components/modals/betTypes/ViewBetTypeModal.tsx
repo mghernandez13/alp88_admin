@@ -72,16 +72,16 @@ const ViewBetTypeModal: React.FC<ViewBetTypeModalProps> = ({
               damping: 25,
               mass: 0.8,
             }}
-            className="relative bg-black border border-gray-700 w-full max-w-md p-8 rounded-lg shadow-2xl z-[70]"
+            className="relative bg-white dark:bg-black border border-gray-200 dark:border-gray-700 w-full max-w-md p-8 rounded-lg shadow-2xl z-[70]"
           >
             <button
               onClick={onClose}
-              className="absolute bg-transparent top-4 right-4 text-white hover:border-none hover:text-gray-600"
+              className="absolute bg-transparent top-4 right-4 text-gray-900 dark:text-white hover:border-none hover:text-gray-600"
             >
               <X size={20} />
             </button>
 
-            <h2 className="text-2xl font-bold text-white mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
               Bet Type Details
             </h2>
 
@@ -131,8 +131,10 @@ const ViewBetTypeModal: React.FC<ViewBetTypeModalProps> = ({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-gray-300">Is Active:</span>
-                <span className="text-white">
+                <span className="text-gray-700 dark:text-gray-300">
+                  Is Active:
+                </span>
+                <span className="text-gray-900 dark:text-white">
                   {formData.isActive ? (
                     <div className="flex items-center">
                       <div className="w-5 h-5 rounded-full border-2 border-yellow-500 flex items-center justify-center">

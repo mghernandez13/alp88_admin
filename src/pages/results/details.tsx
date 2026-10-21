@@ -28,7 +28,8 @@ const ResultsDetailsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { session } = UserAuth();
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [winnerPreviewAsset, setWinnerPreviewAsset] = useState<WinnerImageAsset | null>(null);
+  const [winnerPreviewAsset, setWinnerPreviewAsset] =
+    useState<WinnerImageAsset | null>(null);
   const [winnerPreviewTitle, setWinnerPreviewTitle] = useState("");
   const userId = session?.user?.id;
 
@@ -286,7 +287,7 @@ const ResultsDetailsPage: React.FC = () => {
           <div className="flex items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-3">
               <button
-                className="bg-black text-white px-3 py-2 rounded hover:bg-gray-900 flex items-center"
+                className="bg-white dark:bg-black text-gray-900 dark:text-white px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-900 flex items-center"
                 onClick={() => window.history.back()}
                 aria-label="Back"
               >
@@ -326,9 +327,11 @@ const ResultsDetailsPage: React.FC = () => {
           </div>
 
           {/* Details Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black rounded-lg p-6 mb-8 text-white">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white dark:bg-black rounded-lg p-6 mb-8 text-gray-900 dark:text-white">
             <div>
-              <div className="text-xs text-gray-400">Draw Date</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                Draw Date
+              </div>
               <div className="py-1">
                 {loading ? (
                   <Skeleton width={100} />
@@ -338,7 +341,9 @@ const ResultsDetailsPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-400">Draw Type</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                Draw Type
+              </div>
               <div className="py-1">
                 {loading ? (
                   <Skeleton width={100} />
@@ -357,7 +362,9 @@ const ResultsDetailsPage: React.FC = () => {
               </div>
             )}
             <div>
-              <div className="text-xs text-gray-400">Combination</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                Combination
+              </div>
               <div className="py-1">
                 {loading ? (
                   <Skeleton width={100} />
@@ -367,19 +374,25 @@ const ResultsDetailsPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-400">Bets</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                Bets
+              </div>
               <div className="py-1">
                 {loading ? <Skeleton width={50} /> : (totalResultBets ?? "-")}
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-400">Jackpot Winners</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                Jackpot Winners
+              </div>
               <div className="py-1">
                 {loading ? <Skeleton width={50} /> : jackpotWinners}
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-400">RB Winners</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                RB Winners
+              </div>
               <div className="py-1">
                 {loading ? <Skeleton width={50} /> : rbWinners}
               </div>
@@ -422,6 +435,7 @@ const ResultsDetailsPage: React.FC = () => {
         fileName={winnerPreviewAsset?.fileName ?? ""}
         onClose={closeWinnerPreview}
         onDownload={() => winnerPreviewAsset?.download()}
+        onDownloadExcel={() => winnerPreviewAsset?.downloadExcel()}
       />
     </AdminTemplate>
   );

@@ -7,7 +7,27 @@ export interface DrawResult {
   combination: string;
   created_at: string;
   is_archive: boolean;
-  lotto_types: LottoType;
+  lotto_types: Pick<
+    LottoType,
+    | "id"
+    | "name"
+    | "game_type"
+    | "max_number"
+    | "min_number"
+    | "number_of_digits"
+    | "logo_image"
+  >;
+}
+
+export interface ResultLottoTypesQueryData {
+  lotto_typesCollection: {
+    edges: Array<{
+      node: Pick<LottoType, "id" | "name" | "draw_resultsCollection">;
+    }>;
+    pageInfo: {
+      hasNextPage: boolean;
+    };
+  };
 }
 
 export interface ResultsQueryData {

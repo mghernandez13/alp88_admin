@@ -1,7 +1,28 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="dark" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Restore the explicit preference before styles or the application paint.
+      (() => {
+        let theme = "dark";
+        try {
+          const entry = document.cookie
+            .split(";")
+            .map((cookie) => cookie.trim())
+            .find((cookie) => cookie.startsWith("alphabet88-theme="));
+          if (entry && decodeURIComponent(entry.slice("alphabet88-theme=".length)) === "light") {
+            theme = "light";
+          }
+        } catch {
+          // Fall back to dark when cookies are unavailable or malformed.
+        }
+        const root = document.documentElement;
+        root.classList.toggle("dark", theme === "dark");
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+      })();
+    </script>
     <link
       rel="icon"
       type="image/svg+xml"

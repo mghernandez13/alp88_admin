@@ -72,7 +72,7 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
   }, [onDeleteSelected, selectedRows]);
 
   return (
-    <div className="bg-black relative shadow-md sm:rounded-lg overflow-hidden">
+    <div className="bg-white dark:bg-black relative shadow-md sm:rounded-lg overflow-hidden">
       <TableHeader
         tableName={tableName}
         tableFilter={tableFilter}
@@ -80,13 +80,15 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
         setSearchParams={setSearchParams}
         pageSize={pageSize}
         setPageSize={setPageSize}
+        pageSizeOptions={props.pageSizeOptions}
+        syncSearchWithUrl={props.syncSearchWithUrl}
         selectedCount={selectedRows.size}
         onDeleteSelectedClick={handleDeleteSelected}
         bulkActionPlacement={bulkActionPlacement}
       />
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-          <thead className="text-xs text-gray-700 uppercase bg-[#222910] dark:text-gray-400">
+          <thead className="text-xs text-gray-700 uppercase bg-[#f3f6dc] dark:bg-[#222910] dark:text-gray-400">
             <tr>
               {bulkAction && (
                 <th scope="col" className="px-4 py-3 relative">
@@ -99,7 +101,7 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
                           : false
                       }
                       onChange={(e) => handleSelectAll(e.target.checked)}
-                      className=" accent-yellow-500 bg-[#16191d] border-gray-600 w-4 h-4 cursor-pointer"
+                      className=" accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 w-4 h-4 cursor-pointer"
                     />
                     {bulkActionPlacement === "column" && (
                       <>
@@ -113,11 +115,11 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
                         {menuOpen && (
                           <div
                             ref={menuRef}
-                            className="absolute left-0 mt-8 w-40 bg-[#222222] border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10"
+                            className="absolute left-0 mt-8 w-40 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10"
                           >
                             <button
                               onClick={handleDeleteSelected}
-                              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 bg-black text-white"
+                              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white"
                             >
                               Delete selected
                             </button>
@@ -139,7 +141,7 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
               data &&
               data.length > 0 &&
               data.map((dataItem, rowIndex) => (
-                <tr className="border-b dark:border-gray-700">
+                <tr className="border-b border-gray-200 dark:border-gray-700">
                   {bulkAction && (
                     <td className="px-4 py-3">
                       <input
@@ -148,7 +150,7 @@ const DataTable: React.FC<TableRecordProps> = (props) => {
                         onChange={(e) =>
                           handleRowSelect(rowIndex, e.target.checked)
                         }
-                        className=" accent-yellow-500 bg-[#16191d] border-gray-600 w-4 h-4 cursor-pointer"
+                        className=" accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 w-4 h-4 cursor-pointer"
                       />
                     </td>
                   )}

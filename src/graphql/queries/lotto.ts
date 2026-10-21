@@ -1,5 +1,34 @@
 import { gql } from "@apollo/client";
 
+export const GET_RESULT_LOTTO_TYPES = gql`
+  query GetResultLottoTypes(
+    $first: Int!
+    $offset: Int!
+    $filter: lotto_typesBoolExp
+    $sortOrder: [lotto_typesOrderBy!]
+  ) {
+    lotto_typesCollection(
+      first: $first
+      offset: $offset
+      orderBy: $sortOrder
+      filter: $filter
+    ) {
+      edges {
+        node {
+          id
+          name
+          draw_resultsCollection {
+            totalCount
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+      }
+    }
+  }
+`;
+
 export const GET_LOTTO_TYPES = gql`
   query GetLottoTypes(
     $first: Int!
@@ -32,6 +61,45 @@ export const GET_LOTTO_TYPES = gql`
           draw_resultsCollection {
             totalCount
           }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      totalCount
+    }
+  }
+`;
+
+// Same as GET_LOTTO_TYPES minus per-type bet/result counts, which time out on large bets tables.
+export const GET_LOTTO_TYPE_OPTIONS = gql`
+  query GetLottoTypeOptions(
+    $first: Int!
+    $offset: Int!
+    $filter: lotto_typesBoolExp
+    $sortOrder: [lotto_typesOrderBy!]
+  ) {
+    lotto_typesCollection(
+      first: $first
+      offset: $offset
+      orderBy: $sortOrder
+      filter: $filter
+    ) {
+      edges {
+        node {
+          id
+          game_type
+          draw_time
+          cutoff_time
+          name
+          days_active
+          is_active
+          number_of_digits
+          min_number
+          max_number
+          logo_image
         }
         cursor
       }

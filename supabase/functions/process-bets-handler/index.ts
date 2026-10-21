@@ -499,7 +499,7 @@ Deno.serve(async (req) => {
                   )?.value ?? 0,
                 );
 
-                const prizeAmountPerTen =
+                const prizeAmountPerFive =
                   betTypeCode?.toLowerCase() === "s"
                     ? twoDPetsadaPrizePerTenStraight
                     : betTypeCode?.toLowerCase() === "r"
@@ -514,7 +514,7 @@ Deno.serve(async (req) => {
                   if (isStraightWinner) {
                     isWinner = true;
                     prizeAmount =
-                      Math.floor(bet.bet_amount / 10) * prizeAmountPerTen;
+                      Math.floor(bet.bet_amount / 5) * prizeAmountPerFive;
                   }
                 } else if (betTypeCode?.toLowerCase() === "r") {
                   const isRambleWinner = checkIfRambolitoWinner(
@@ -524,7 +524,7 @@ Deno.serve(async (req) => {
                   if (isRambleWinner) {
                     isWinner = true;
                     prizeAmount =
-                      Math.floor(bet.bet_amount / 10) * prizeAmountPerTen;
+                      Math.floor(bet.bet_amount / 5) * prizeAmountPerFive;
                   }
                 }
               } else if (isMonthlyBracket) {
@@ -544,7 +544,7 @@ Deno.serve(async (req) => {
                   )?.value ?? 0,
                 );
 
-                const prizeAmountPerTen =
+                const prizeAmountPerFive =
                   betTypeCode?.toLowerCase() === "s"
                     ? twoDMonthlyBracketPrizePerTenStraight
                     : betTypeCode?.toLowerCase() === "r"
@@ -559,7 +559,7 @@ Deno.serve(async (req) => {
                   if (isStraightWinner) {
                     isWinner = true;
                     prizeAmount =
-                      Math.floor(bet.bet_amount / 10) * prizeAmountPerTen;
+                      Math.floor(bet.bet_amount / 5) * prizeAmountPerFive;
                   }
                 } else if (betTypeCode?.toLowerCase() === "r") {
                   const isRambleWinner = checkIfRambolitoWinner(
@@ -570,7 +570,7 @@ Deno.serve(async (req) => {
                   if (isRambleWinner) {
                     isWinner = true;
                     prizeAmount =
-                      Math.floor(bet.bet_amount / 10) * prizeAmountPerTen;
+                      Math.floor(bet.bet_amount / 5) * prizeAmountPerFive;
                   }
                 }
               } else {
@@ -598,7 +598,7 @@ Deno.serve(async (req) => {
                       )?.value ?? 0,
                     );
                     prizeAmount =
-                      Math.floor(bet.bet_amount / 10) * twoDPompyangPrizePerTen;
+                      Math.floor(bet.bet_amount / 5) * twoDPompyangPrizePerTen;
                   } else if (isStraightWinner) {
                     isWinner = true;
                     prizeAmount = betPrizeData ? betPrizeData.prize : 0;

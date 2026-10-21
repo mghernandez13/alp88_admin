@@ -30,7 +30,7 @@ const AdminTemplateContent: React.FC<PropsWithChildren> = ({ children }) => {
     <div className="flex w-full h-auto">
       <div className="flex-col w-full h-auto">
         <Header />
-        <section className="flex w-full min-h-screen h-auto bg-[#222222]">
+        <section className="flex w-full min-h-screen h-auto bg-gray-100 dark:bg-[#222222] text-gray-900 dark:text-white">
           <Sidebar className="flex max-w-64 w-1/5 h-auto" />
           <div
             className={`flex ${collapsed ? "w-4/5 w-[91%]" : "w-4/5"} sm:mt-4`}

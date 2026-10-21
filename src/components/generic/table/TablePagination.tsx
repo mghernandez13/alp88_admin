@@ -46,7 +46,7 @@ const TablePagination: React.FC<TablePaginationProps> = (props) => {
           <button
             disabled={loading || currentPage === 1}
             onClick={() => handlePageNavigation(currentPage - 1)}
-            className="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-[#222222] rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            className="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white dark:bg-[#222222] rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
           >
             <span className="sr-only">Previous</span>
             <svg
@@ -98,7 +98,7 @@ const TablePagination: React.FC<TablePaginationProps> = (props) => {
               <button
                 disabled={loading || (page === "..." && !onClickHandler)}
                 onClick={onClickHandler}
-                className={`flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 border border-gray-300 hover:bg-gray-100 hover:text-gray-700 ${currentPage === page ? `bg-[#222910]` : `bg-[#222222]`} dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white`}
+                className={`flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 border border-gray-300 hover:bg-gray-100 hover:text-gray-700 ${currentPage === page ? `bg-[#f3f6dc] dark:bg-[#222910]` : `bg-white dark:bg-[#222222]`} dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white`}
               >
                 {page}
               </button>
@@ -109,7 +109,7 @@ const TablePagination: React.FC<TablePaginationProps> = (props) => {
         <li>
           <button
             disabled={loading || !hasNextPage}
-            className="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 bg-[#222222] dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            className="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 bg-white dark:bg-[#222222] dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
             onClick={() => handlePageNavigation(currentPage + 1)}
           >
             <span className="sr-only">Next</span>

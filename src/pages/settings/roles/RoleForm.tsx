@@ -66,7 +66,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
   return (
     <form
       onSubmit={onSubmit}
-      className="bg-black p-8 rounded-lg border border-gray-700 shadow-2xl"
+      className="bg-white dark:bg-black p-8 rounded-lg border border-gray-200 dark:border-gray-700 shadow-2xl"
     >
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2 w-full md:w-1/2">
@@ -95,7 +95,9 @@ const RoleForm: React.FC<RoleFormProps> = ({
                   onChange={() => handleCheckAll("view")}
                   className="accent-yellow-500"
                 />
-                <span className="text-white">Select All</span>
+                <span className="text-gray-900 dark:text-white">
+                  Select All
+                </span>
               </label>
               {getColumnPerms("view").map((perm) => (
                 <label key={perm} className="flex items-center gap-2 mb-2">
@@ -107,7 +109,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
                     onChange={onChange}
                     className="accent-yellow-500"
                   />
-                  <span className="text-white">{perm}</span>
+                  <span className="text-gray-900 dark:text-white">{perm}</span>
                 </label>
               ))}
             </div>
@@ -123,7 +125,9 @@ const RoleForm: React.FC<RoleFormProps> = ({
                   onChange={() => handleCheckAll("add")}
                   className="accent-yellow-500"
                 />
-                <span className="text-white">Select All</span>
+                <span className="text-gray-900 dark:text-white">
+                  Select All
+                </span>
               </label>
               {getColumnPerms("add").map((perm) => (
                 <label key={perm} className="flex items-center gap-2 mb-2">
@@ -135,7 +139,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
                     onChange={onChange}
                     className="accent-yellow-500"
                   />
-                  <span className="text-white">{perm}</span>
+                  <span className="text-gray-900 dark:text-white">{perm}</span>
                 </label>
               ))}
             </div>
@@ -151,7 +155,9 @@ const RoleForm: React.FC<RoleFormProps> = ({
                   onChange={() => handleCheckAll("edit")}
                   className="accent-yellow-500"
                 />
-                <span className="text-white">Select All</span>
+                <span className="text-gray-900 dark:text-white">
+                  Select All
+                </span>
               </label>
               {getColumnPerms("edit").map((perm) => (
                 <label key={perm} className="flex items-center gap-2 mb-2">
@@ -163,7 +169,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
                     onChange={onChange}
                     className="accent-yellow-500"
                   />
-                  <span className="text-white">{perm}</span>
+                  <span className="text-gray-900 dark:text-white">{perm}</span>
                 </label>
               ))}
             </div>
@@ -178,7 +184,9 @@ const RoleForm: React.FC<RoleFormProps> = ({
                   onChange={() => handleCheckAll("delete")}
                   className="accent-yellow-500"
                 />
-                <span className="text-white text-xs">Check All</span>
+                <span className="text-gray-900 dark:text-white text-xs">
+                  Check All
+                </span>
               </label>
               {getColumnPerms("delete").map((perm) => (
                 <label key={perm} className="flex items-center gap-2 mb-2">
@@ -190,7 +198,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
                     onChange={onChange}
                     className="accent-yellow-500"
                   />
-                  <span className="text-white">{perm}</span>
+                  <span className="text-gray-900 dark:text-white">{perm}</span>
                 </label>
               ))}
             </div>
@@ -207,7 +215,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
                   onChange={onChange}
                   className="accent-yellow-500"
                 />
-                <span className="text-white">{perm}</span>
+                <span className="text-gray-900 dark:text-white">{perm}</span>
               </label>
             ))}
           </div>
@@ -216,7 +224,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-md transition-all shadow-md active:scale-95"
+            className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-md transition-all shadow-md active:scale-95"
           >
             Cancel
           </button>

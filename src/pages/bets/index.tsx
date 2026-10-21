@@ -1,7 +1,7 @@
 import AdminTemplate from "../../templates/AdminTemplate";
 import DataTable from "../../components/generic/table";
 import Headline from "../../components/generic/Headline";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import { GET_LOTTO_TYPES } from "../../graphql/queries/lotto";
@@ -65,6 +65,8 @@ const BetsPage: React.FC = () => {
   const [selectedBet, setSelectedBet] = useState<Bets | null>(null);
   const [allBets, setAllBets] = useState<Bets[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const countRequestId = useRef(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<TableError | null>(null);
   // Fetch lotto types and bet types for filters
@@ -98,13 +100,15 @@ const BetsPage: React.FC = () => {
     setLoading(true);
     setError(null);
 
+    let orFilter: string | null = null;
+
     let query = supabase
       .from("bets")
       .select(
         `
           id,
           created_by,
-          lotto_types!inner(id, name, draw_time, game_type),
+          lotto_types(id, name, draw_time, game_type),
           bet_types(id, draw_time, name, code),
           profiles:agent_id(full_name),
           bet_amount,
@@ -117,12 +121,38 @@ const BetsPage: React.FC = () => {
           created_at,
           is_dummy_bet
         `,
-        { count: "exact" },
       )
       .eq("is_archive", false)
       .eq("is_dummy_bet", false)
       .eq("bet_status", "completed")
       .order("created_at", { ascending: false });
+
+    // Counting is done in separate head requests so the row fetch does not
+    // have to scan the whole filtered set together with the embedded joins.
+    const buildCountQuery = (mode: "exact" | "planned") => {
+      let countQuery = supabase
+        .from("bets")
+        .select("id", { count: mode, head: true })
+        .eq("is_archive", false)
+        .eq("is_dummy_bet", false)
+        .eq("bet_status", "completed");
+
+      if (selectedLottoTypes.length > 0) {
+        countQuery = countQuery.in("lotto_type_id", selectedLottoTypes);
+      }
+      if (selectedBetTypes.length > 0) {
+        countQuery = countQuery.in("bet_type_id", selectedBetTypes);
+      }
+      if (dateRange.start && dateRange.end) {
+        countQuery = countQuery
+          .gte("created_at", dateRange.start)
+          .lte("created_at", `${dateRange.end}T23:59:59.999`);
+      }
+      if (orFilter) {
+        countQuery = countQuery.or(orFilter);
+      }
+      return countQuery;
+    };
 
     if (selectedLottoTypes.length > 0) {
       query = query.in("lotto_type_id", selectedLottoTypes);
@@ -143,9 +173,10 @@ const BetsPage: React.FC = () => {
       const escapedSearchQuery = trimmedSearchQuery
         .replace(/[%_]/g, "\\$&")
         .replace(/[(),]/g, "");
-      const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        trimmedSearchQuery,
-      );
+      const looksLikeUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          trimmedSearchQuery,
+        );
 
       const searchFilter = looksLikeUuid
         ? `id.eq.${trimmedSearchQuery},combination.ilike.%${escapedSearchQuery}%,bettor_name.ilike.%${escapedSearchQuery}%`
@@ -157,28 +188,47 @@ const BetsPage: React.FC = () => {
         .ilike("full_name", `%${escapedSearchQuery}%`);
       const matchingAgentIds = (matchingAgents ?? []).map((agent) => agent.id);
 
-      query = query.or(
+      orFilter =
         matchingAgentIds.length > 0
           ? `${searchFilter},agent_id.in.(${matchingAgentIds.join(",")})`
-          : searchFilter,
-      );
+          : searchFilter;
+
+      query = query.or(orFilter);
     }
 
-    const { data, count, error: listError } = await query.range(
-      offset,
-      offset + pageSize - 1,
-    );
+    // One extra row is requested so the next-page arrow stays usable even when
+    // the total count cannot be resolved.
+    const listResult = await query.range(offset, offset + pageSize);
+
+    const { data, error: listError } = listResult;
 
     if (listError) {
       setAllBets([]);
       setTotalCount(0);
+      setHasMore(false);
       setError({ name: "SupabaseError", message: listError.message });
       setLoading(false);
       return;
     }
 
+    const pageRows = (data ?? []).slice(0, pageSize);
+    const hasMoreRows = (data ?? []).length > pageSize;
+
+    // The exact count is slow on this table, so it resolves on its own and only
+    // refreshes the pagination label once it lands.
+    const requestId = ++countRequestId.current;
+    void (async () => {
+      let resolvedCount = (await buildCountQuery("exact")).count ?? null;
+      if (resolvedCount === null) {
+        resolvedCount = (await buildCountQuery("planned")).count ?? null;
+      }
+      if (resolvedCount !== null && requestId === countRequestId.current) {
+        setTotalCount(resolvedCount);
+      }
+    })();
+
     const creatorIds = [
-      ...new Set((data ?? []).map((row) => row?.created_by).filter(Boolean)),
+      ...new Set(pageRows.map((row) => row?.created_by).filter(Boolean)),
     ] as string[];
 
     let creatorProfiles: Record<string, string> = {};
@@ -201,7 +251,7 @@ const BetsPage: React.FC = () => {
       }
     }
 
-    const rows = ((data ?? []) as BetSupabaseRow[]).map((row) => ({
+    const rows = (pageRows as BetSupabaseRow[]).map((row) => ({
       id: row.id,
       lotto_types: normalizeRelation(row.lotto_types) ?? {
         id: "",
@@ -236,7 +286,8 @@ const BetsPage: React.FC = () => {
     }));
 
     setAllBets(rows);
-    setTotalCount(count ?? 0);
+    setHasMore(hasMoreRows);
+    setTotalCount(offset + rows.length + (hasMoreRows ? pageSize : 0));
     setLoading(false);
   }, [
     dateRange.end,
@@ -345,10 +396,10 @@ const BetsPage: React.FC = () => {
               </IconTableActionButton>
 
               <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                   View
                 </span>
-                <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
               </div>
             </div>
           </td>
@@ -357,7 +408,7 @@ const BetsPage: React.FC = () => {
     });
   }, [paginatedBets]);
 
-  const hasNextPage = offset + paginatedBets.length < totalCount;
+  const hasNextPage = hasMore || offset + paginatedBets.length < totalCount;
 
   // Prepare filter data for TableHeader
   // Use master data for filter counts (imitate agents table)

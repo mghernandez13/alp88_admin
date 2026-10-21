@@ -3,8 +3,9 @@ import { UserAuth } from "./context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import PrimaryLogo from "./logo/PrimaryLogo";
 import { useSidebar } from "./context/SidebarContext";
-import { User } from "lucide-react";
+import { Moon, Sun, User } from "lucide-react";
 import { supabase } from "../db/supabase";
+import { useTheme } from "./context/ThemeContext.tsx";
 
 type HeaderNotification = {
   id: number;
@@ -17,6 +18,7 @@ type HeaderNotification = {
 };
 
 const Header: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   const { setLoadingPage, signOut } = UserAuth();
   const navigate = useNavigate();
   const [toggleUserMenu, setToggleUserMenu] = useState(false);
@@ -228,7 +230,7 @@ const Header: React.FC = () => {
   const { toggleSidebar } = useSidebar();
   return (
     <header className="antialiased">
-      <nav className="px-4 lg:px-6 py-2.5 bg-black border-b border-gray-700">
+      <nav className="px-4 lg:px-6 py-2.5 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-row w-full justify-between items-center gap-2">
           <div className="flex flex-row items-center min-w-0">
             <button
@@ -256,7 +258,7 @@ const Header: React.FC = () => {
             </button>
             {/* Mobile sidebar toggle button removed as requested */}
             <div className="flex ml-2 mr-2 min-w-0">
-              <a href="/" className="flex items-center min-w-0">
+              <a href="/summary" className="flex items-center min-w-0">
                 <PrimaryLogo />
               </a>
             </div>
@@ -336,12 +338,26 @@ const Header: React.FC = () => {
               </svg>
             </button>
             <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              aria-pressed={theme === "dark"}
+              className="p-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white focus-visible:ring-2 focus-visible:ring-yellow-500"
+            >
+              {theme === "dark" ? (
+                <Sun className="w-5 h-5" aria-hidden="true" />
+              ) : (
+                <Moon className="w-5 h-5" aria-hidden="true" />
+              )}
+            </button>
+            <button
               ref={notificationButtonRef}
               type="button"
               data-dropdown-toggle="notification-dropdown"
               onClick={handleToggleNotificationMenu}
               aria-expanded={toggleNotificationMenu}
-              className="relative p-2 mr-1 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 bg-gray-800"
+              className="relative p-2 mr-1 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 bg-gray-100 dark:bg-gray-800"
             >
               <span className="sr-only">View notifications</span>
               {unreadCount > 0 && (
@@ -361,20 +377,20 @@ const Header: React.FC = () => {
             </button>
             <div
               ref={notificationMenuRef}
-              className={`${toggleNotificationMenu ? "block" : "hidden"} absolute right-10 top-10 overflow-hidden z-50 w-[250px] text-base list-none bg-black rounded divide-y divide-gray-100 shadow-lg dark:divide-gray-600`}
+              className={`${toggleNotificationMenu ? "block" : "hidden"} absolute right-10 top-10 overflow-hidden z-50 w-[250px] text-base list-none bg-white dark:bg-black rounded divide-y divide-gray-100 shadow-lg dark:divide-gray-600`}
               id="notification-dropdown"
             >
-              <div className="block py-2 px-4 text-base font-medium text-center text-white bg-black">
+              <div className="block py-2 px-4 text-base font-medium text-center text-gray-900 dark:text-white bg-white dark:bg-black">
                 Notifications
               </div>
               <div>
                 {notificationsLoading && (
-                  <div className="px-4 py-3 text-sm text-gray-300">
+                  <div className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                     Loading notifications...
                   </div>
                 )}
                 {!notificationsLoading && notifications.length === 0 && (
-                  <div className="px-4 py-3 text-sm text-gray-300">
+                  <div className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                     No notifications found.
                   </div>
                 )}
@@ -389,15 +405,15 @@ const Header: React.FC = () => {
                           notification.unread,
                         )
                       }
-                      className={`w-full text-left flex py-3 px-4 border-t-none border-l-none border-r-none border-b border-gray-700 hover:bg-gray-900 rounded-none ${notification.unread ? "bg-[#222910]" : "bg-yellow-900/20"}`}
+                      className={`w-full text-left flex py-3 px-4 border-t-none border-l-none border-r-none border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-none ${notification.unread ? "bg-[#f1f5e5] dark:bg-[#222910]" : "bg-yellow-900/20"}`}
                     >
                       <div className="pl-1 w-full">
                         <div
-                          className={`font-semibold text-sm mb-1 ${notification.unread ? "text-yellow-300" : "text-gray-100"}`}
+                          className={`font-semibold text-sm mb-1 ${notification.unread ? "text-yellow-300" : "text-gray-900 dark:text-gray-100"}`}
                         >
                           {notification.title}
                         </div>
-                        <div className="text-gray-400 text-xs mb-1">
+                        <div className="text-gray-600 dark:text-gray-400 text-xs mb-1">
                           {notification.content}
                         </div>
                         <div className="text-[11px] text-blue-400">
@@ -412,7 +428,7 @@ const Header: React.FC = () => {
                 onClick={() => {
                   void handleViewAllNotifications();
                 }}
-                className="w-full block py-2 text-base font-medium text-center bg-black hover:bg-gray-800 text-white rounded-none border-none"
+                className="w-full block py-2 text-base font-medium text-center bg-white dark:bg-black hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white rounded-none border-none"
               >
                 <div className="inline-flex items-center ">
                   <svg
@@ -617,7 +633,7 @@ const Header: React.FC = () => {
               type="button"
               ref={userMenuButtonRef}
               onClick={handleToggleUserMenu}
-              className="flex mx-0 text-sm bg-[#22222] bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+              className="flex mx-0 text-sm bg-gray-100 dark:bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
               id="user-menu-button"
               aria-expanded="false"
               data-dropdown-toggle="dropdown"
@@ -631,15 +647,15 @@ const Header: React.FC = () => {
                   alt="user photo"
                 />
               ) : (
-                <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center border-2 border-gray-500">
-                  <User className="text-gray-400 w-6 h-6" />
+                <div className="w-full h-full rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-300 dark:border-gray-500">
+                  <User className="text-gray-600 dark:text-gray-400 w-6 h-6" />
                 </div>
               )}
             </button>
             {toggleUserMenu && (
               <div
                 ref={userMenuRef}
-                className="absolute top-12 right-1 z-50 my-4 w-56 text-base list-none bg-black rounded divide-y divide-gray-100 shadow dark:divide-gray-600"
+                className="absolute top-12 right-1 z-50 my-4 w-56 text-base list-none bg-white dark:bg-black rounded divide-y divide-gray-100 shadow dark:divide-gray-600"
                 id="dropdown"
               >
                 <div className="py-3 px-4">
@@ -657,7 +673,7 @@ const Header: React.FC = () => {
                   <li>
                     <a
                       href="/profile"
-                      className="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
+                      className="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
                     >
                       My profile
                     </a>
@@ -755,7 +771,7 @@ const Header: React.FC = () => {
                     <a
                       href="#"
                       onClick={handleSignOut}
-                      className="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                      className="block py-2 px-4 text-sm text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                     >
                       Sign out
                     </a>

@@ -39,7 +39,7 @@ const ViewRoleModal: React.FC<ViewRoleModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div
         ref={modalRef}
-        className="bg-black p-8 rounded-lg border border-gray-700 shadow-2xl w-full max-w-xl"
+        className="bg-white dark:bg-black p-8 rounded-lg border border-gray-200 dark:border-gray-700 shadow-2xl w-full max-w-xl"
         style={{
           maxHeight: "90vh",
           overflowY: "auto",
@@ -52,7 +52,7 @@ const ViewRoleModal: React.FC<ViewRoleModalProps> = ({
               type="text"
               value={role.name}
               readOnly
-              className="bg-gray-800 text-white rounded px-3 py-2 border border-gray-600"
+              className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded px-3 py-2 border border-gray-300 dark:border-gray-600"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -92,7 +92,7 @@ const ViewRoleModal: React.FC<ViewRoleModalProps> = ({
                             border: "2px solid #eab308",
                             backgroundColor: role.permissions.includes(perm)
                               ? "#eab308"
-                              : "#374151",
+                              : "var(--theme-checkbox-background)",
                             cursor: "not-allowed",
                           }}
                         />
@@ -120,7 +120,9 @@ const ViewRoleModal: React.FC<ViewRoleModalProps> = ({
                           </svg>
                         )}
                       </span>
-                      <span className="text-white text-xs">{perm}</span>
+                      <span className="text-gray-900 dark:text-white text-xs">
+                        {perm}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -152,7 +154,7 @@ const ViewRoleModal: React.FC<ViewRoleModalProps> = ({
                         border: "2px solid #eab308",
                         backgroundColor: role.permissions.includes(perm)
                           ? "#eab308"
-                          : "#374151",
+                          : "var(--theme-checkbox-background)",
                         cursor: "not-allowed",
                       }}
                     />
@@ -180,7 +182,9 @@ const ViewRoleModal: React.FC<ViewRoleModalProps> = ({
                       </svg>
                     )}
                   </span>
-                  <span className="text-white text-xs">{perm}</span>
+                  <span className="text-gray-900 dark:text-white text-xs">
+                    {perm}
+                  </span>
                 </label>
               ))}
             </div>
@@ -189,7 +193,7 @@ const ViewRoleModal: React.FC<ViewRoleModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-md transition-all shadow-md active:scale-95"
+              className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-bold py-3 px-6 rounded-md transition-all shadow-md active:scale-95"
             >
               Close
             </button>

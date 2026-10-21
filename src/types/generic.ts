@@ -34,6 +34,8 @@ export interface TableColumnsProps {
   handleSort?: (columnName: string) => void;
 }
 export interface TableRecordProps {
+  pageSizeOptions?: number[];
+  syncSearchWithUrl?: boolean;
   loading: boolean;
   error: ErrorLike | undefined;
   tableName: string;
@@ -79,6 +81,7 @@ export interface TablePaginationProps {
 }
 
 export interface TableHeaderProps {
+  syncSearchWithUrl?: boolean;
   tableName: string;
   tableFilter?: TableFilter;
   searchParams: URLSearchParams;
@@ -136,11 +139,6 @@ export interface SearchableSelectOption {
   value?: string;
   label: string;
   level: number;
-}
-
-export interface DashboardCardProps {
-  startDate: string;
-  endDate: string;
 }
 
 export interface SummaryProps {

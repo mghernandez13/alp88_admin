@@ -221,9 +221,9 @@ const AgentForm: React.FC<AgentFormProps> = (props) => {
     <form
       ref={formRef}
       onSubmit={(e) => handleSubmit(e, createAnother)}
-      className="bg-black p-8 rounded-lg border border-gray-700 shadow-2xl"
+      className="bg-white dark:bg-black p-8 rounded-lg border border-gray-200 dark:border-gray-700 shadow-2xl"
     >
-      <div className="flex flex-col items-center mb-8 p-4 bg-[#16191d] rounded-lg border border-gray-700">
+      <div className="flex flex-col items-center mb-8 p-4 bg-gray-50 dark:bg-[#16191d] rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="relative w-24 h-24 mb-4">
           {formData.avatarUrl &&
           formData.avatarUrl !== "null" &&
@@ -234,8 +234,8 @@ const AgentForm: React.FC<AgentFormProps> = (props) => {
               alt="Avatar"
             />
           ) : (
-            <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-500">
-              <User className="text-gray-400 w-10 h-10" />
+            <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-500">
+              <User className="text-gray-600 dark:text-gray-400 w-10 h-10" />
             </div>
           )}
 
@@ -246,7 +246,7 @@ const AgentForm: React.FC<AgentFormProps> = (props) => {
           )}
         </div>
 
-        <label className="cursor-pointer bg-gray-700 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-md transition-colors flex items-center gap-2">
+        <label className="cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-xs px-4 py-2 rounded-md transition-colors flex items-center gap-2">
           <Upload size={14} />
           {uploading ? <Loading /> : "Upload Profile Image"}
           <input
@@ -408,11 +408,11 @@ const AgentForm: React.FC<AgentFormProps> = (props) => {
             name="isQuotaBased"
             checked={formData.isQuotaBased}
             onChange={handleFormChange}
-            className="w-5 h-5 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+            className="w-5 h-5 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
           />
           <label
             htmlFor="isQuotaBased"
-            className="text-gray-300 font-medium cursor-pointer"
+            className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer"
           >
             Is Quota based?
           </label>
@@ -425,11 +425,11 @@ const AgentForm: React.FC<AgentFormProps> = (props) => {
             name="isActive"
             checked={formData.isActive}
             onChange={handleFormChange}
-            className="w-5 h-5 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+            className="w-5 h-5 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
           />
           <label
             htmlFor="isActive"
-            className="text-gray-300 font-medium cursor-pointer"
+            className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer"
           >
             Is Active
           </label>

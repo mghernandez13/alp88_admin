@@ -18,6 +18,8 @@ export const GET_RESULTS = gql`
         node {
           id
           draw_date
+          draw_type
+          is_archive
           lotto_types {
             id
             name
@@ -26,21 +28,6 @@ export const GET_RESULTS = gql`
             min_number
             number_of_digits
             logo_image
-            betsCollection {
-              edges {
-                node {
-                  id
-                  hit
-                  is_super_jackpot
-                  bet_types {
-                    id
-                    name
-                    code
-                  }
-                }
-              }
-              totalCount
-            }
           }
           combination
           created_at

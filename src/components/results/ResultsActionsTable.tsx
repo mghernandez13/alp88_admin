@@ -50,13 +50,15 @@ const ResultsActionsTable: React.FC<ResultsActionsTableProps> = ({
   }, [resultId]);
 
   return (
-    <div className="bg-black rounded-lg p-6 mt-8 ml-6">
+    <div className="bg-white dark:bg-black rounded-lg p-6 mt-8 ml-6">
       <div className="flex items-center justify-between mb-4">
-        <div className="font-semibold text-lg text-white">Actions</div>
+        <div className="font-semibold text-lg text-gray-900 dark:text-white">
+          Actions
+        </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-left text-gray-400">
-          <thead className="text-xs uppercase bg-[#222222] text-gray-400">
+        <table className="min-w-full text-sm text-left text-gray-600 dark:text-gray-400">
+          <thead className="text-xs uppercase bg-gray-100 dark:bg-[#222222] text-gray-600 dark:text-gray-400">
             <tr>
               <th className="px-4 py-2 font-semibold">ID</th>
               <th className="px-4 py-2 font-semibold">Name</th>
@@ -76,7 +78,10 @@ const ResultsActionsTable: React.FC<ResultsActionsTableProps> = ({
               </tr>
             ) : logsData?.draw_results_logsCollection?.edges?.length ? (
               logsData.draw_results_logsCollection.edges.map(({ node }) => (
-                <tr key={node.id} className="border-b border-gray-700">
+                <tr
+                  key={node.id}
+                  className="border-b border-gray-200 dark:border-gray-700"
+                >
                   <td className="px-4 py-3 text-yellow-500 underline cursor-pointer">
                     {node.id}
                   </td>
@@ -112,7 +117,7 @@ const ResultsActionsTable: React.FC<ResultsActionsTableProps> = ({
                   </td>
                   <td className="px-4 py-3 text-center">
                     {/* <span
-                      className="inline-block w-5 h-5 text-gray-400 hover:text-white cursor-pointer"
+                      className="inline-block w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer"
                       title="View"
                     >
                       <svg
@@ -139,7 +144,10 @@ const ResultsActionsTable: React.FC<ResultsActionsTableProps> = ({
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="text-center text-gray-400 py-4">
+                <td
+                  colSpan={7}
+                  className="text-center text-gray-600 dark:text-gray-400 py-4"
+                >
                   No actions found.
                 </td>
               </tr>
@@ -151,17 +159,17 @@ const ResultsActionsTable: React.FC<ResultsActionsTableProps> = ({
       {totalPages > 1 && (
         <div className="flex justify-end items-center gap-2 mt-4">
           <button
-            className="px-3 py-1 rounded bg-[#222222] hover:bg-[#222910] text-white disabled:opacity-50"
+            className="px-3 py-1 rounded bg-gray-100 dark:bg-[#222222] hover:bg-[#f3f6dc] dark:hover:bg-[#222910] text-gray-900 dark:text-white disabled:opacity-50"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
             Previous
           </button>
-          <span className="text-gray-300">
+          <span className="text-gray-700 dark:text-gray-300">
             Page {page} of {totalPages}
           </span>
           <button
-            className="px-3 py-1 rounded bg-[#222222] hover:bg-[#222910] text-white disabled:opacity-50"
+            className="px-3 py-1 rounded bg-gray-100 dark:bg-[#222222] hover:bg-[#f3f6dc] dark:hover:bg-[#222910] text-gray-900 dark:text-white disabled:opacity-50"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >

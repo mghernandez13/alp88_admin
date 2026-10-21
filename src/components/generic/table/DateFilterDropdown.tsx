@@ -33,7 +33,7 @@ const DateFilterDropdown: React.FC<DateFilterDropdownProps> = ({
         value={localStart ? localStart.split("T")[0] : ""}
         onChange={(e) => setLocalStart(e.target.value)}
         max={localEnd ? localEnd.split("T")[0] : undefined}
-        className="w-full border border-gray-300 rounded px-2 py-1 mb-2 dark:bg-gray-600 dark:text-white"
+        className="w-full bg-white text-gray-900 border border-gray-300 rounded px-2 py-1 mb-2 dark:bg-gray-600 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
       />
       <label className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
         End Date
@@ -43,7 +43,7 @@ const DateFilterDropdown: React.FC<DateFilterDropdownProps> = ({
         value={localEnd ? localEnd.split("T")[0] : ""}
         onChange={(e) => setLocalEnd(e.target.value)}
         min={localStart ? localStart.split("T")[0] : undefined}
-        className="w-full border border-gray-300 rounded px-2 py-1 dark:bg-gray-600 dark:text-white"
+        className="w-full bg-white text-gray-900 border border-gray-300 rounded px-2 py-1 dark:bg-gray-600 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
       />
       <PrimaryButton onClick={handleApply} type="button">
         Apply

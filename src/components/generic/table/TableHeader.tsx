@@ -30,6 +30,13 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
   } | null>(null);
   const [searchChange, setSearchChange] = useState(false);
 
+  useEffect(() => {
+    if (props.syncSearchWithUrl) {
+      setSearchChange(false);
+      setInputValue(searchQuery);
+    }
+  }, [searchQuery, props.syncSearchWithUrl]);
+
   // Open/close a specific filter dropdown
   const toggleShowFilter = useCallback((label: string) => {
     setOpenFilter((prev) => {
@@ -127,9 +134,12 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
             onChange={(e) => {
               const newSize = Number(e.target.value);
               setPageSize(newSize);
-              setSearchParams({ search: inputValue, page: "1" });
+              setSearchParams({
+                search: props.syncSearchWithUrl ? searchQuery : inputValue,
+                page: "1",
+              });
             }}
-            className="bg-[#222222] border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 py-2 px-1 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+            className="bg-white dark:bg-[#222222] border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 py-2 px-1 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
           >
             {pageSizeOptions.map((opt) => {
               return (
@@ -164,7 +174,7 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
                 setSearchChange(true);
                 setInputValue(e.target.value);
               }}
-              className="bg-[#222222] border border-gray-300 text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:border-gray-600 dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              className="bg-white dark:bg-[#222222] border border-gray-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:border-gray-600 dark:focus:ring-primary-500 dark:focus:border-primary-500"
               placeholder="Search"
               required
             />
@@ -178,20 +188,20 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
             <div className="relative" ref={deleteMenuRef}>
               <button
                 onClick={() => setDeleteMenuOpen((o) => !o)}
-                className={`w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-[#222222] rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 ${deleteMenuOpen ? "ring-2 ring-primary-500" : ""}`}
+                className={`w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white dark:bg-[#222222] rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 ${deleteMenuOpen ? "ring-2 ring-primary-500" : ""}`}
                 type="button"
               >
                 {`Actions (${selectedCount})`}
                 <ChevronDown className="-mr-1 ml-1.5 w-5 h-5" />
               </button>
               {deleteMenuOpen && (
-                <div className="absolute left-0 mt-2 w-40 bg-[#222222] border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10">
+                <div className="absolute left-0 mt-2 w-40 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10">
                   <button
                     onClick={() => {
                       setDeleteMenuOpen(false);
                       onDeleteSelectedClick?.();
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 bg-black text-white"
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white"
                   >
                     Delete selected
                   </button>
@@ -208,16 +218,16 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
                     data-dropdown-toggle={`filterDropdown-${filter.label}`}
                     onClick={() => toggleShowFilter(filter.label)}
                     ref={filterMenuButtonRef}
-                    className={`w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-[#222222] rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 ${openFilter === filter.label ? "ring-2 ring-primary-500" : ""}`}
+                    className={`w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white dark:bg-[#222222] rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 ${openFilter === filter.label ? "ring-2 ring-primary-500" : ""}`}
                     type="button"
                   >
                     {filter.label === "Date Filter" ? (
-                      <Clock3 className="h-5 w-5 mr-2 text-gray-400" />
+                      <Clock3 className="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" />
                     ) : (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden="true"
-                        className="h-4 w-4 mr-2 text-gray-400"
+                        className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -259,7 +269,7 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
                           minWidth: "12rem",
                           maxWidth: "90vw",
                         }}
-                        className="p-3 bg-[#222910] rounded-lg shadow"
+                        className="p-3 bg-[#f3f6dc] dark:bg-[#222910] rounded-lg shadow"
                       >
                         <h6 className="mb-3 text-sm font-medium text-gray-900 dark:text-white">
                           Choose {filter.label}
@@ -286,7 +296,7 @@ const TableHeader: React.FC<TableHeaderProps> = (props) => {
                                   checked={filter.selectedFilter.includes(
                                     item.value,
                                   )}
-                                  className="w-4 h-4 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+                                  className="w-4 h-4 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
                                   onChange={() =>
                                     filter.setSelectedFilter((prev) =>
                                       prev.includes(item.value)

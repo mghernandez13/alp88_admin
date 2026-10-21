@@ -15,7 +15,7 @@ const Skeleton: React.FC<SkeletonProps> = ({
 }) => {
   return (
     <span
-      className={`animate-pulse bg-gray-700 rounded ${className}`}
+      className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded ${className}`}
       style={{
         display: "inline-block",
         width,

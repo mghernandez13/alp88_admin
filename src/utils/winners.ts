@@ -1,4 +1,5 @@
 import { supabase } from "../db/supabase";
+import { generateWinnerExcelFile } from "./excel";
 import { isRambolito3 } from "./bets";
 
 type RelationData<T> = T | T[] | null;
@@ -37,6 +38,7 @@ type DownloadWinnersImageOptions = {
   winningCombination: string;
   logoImageSrc?: string | null;
   fileNamePrefix?: string;
+  theme?: "light" | "dark";
 };
 
 type FetchWinnerRowsOptions = {
@@ -62,6 +64,7 @@ export type WinnerImageAsset = {
   imageUrl: string;
   fileName: string;
   download: () => void;
+  downloadExcel: () => Promise<void>;
   revoke: () => void;
 };
 
@@ -301,6 +304,9 @@ const renderWinnerImageCanvas = async ({
   winningCombination,
   logoImageSrc,
   fileNamePrefix = "winners",
+  // Resolve at generation time so every preview/download entry point uses
+  // the current theme, including after asynchronous winner-data requests.
+  theme = document.documentElement.dataset.theme === "light" ? "light" : "dark",
 }: DownloadWinnersImageOptions) => {
   if (!rows.length) {
     throw new Error("No winners available for image generation.");
@@ -325,32 +331,48 @@ const renderWinnerImageCanvas = async ({
     padding + headerHeight + tableHeaderHeight + rowHeight * rows.length + 34;
   const summaryRightX = tableX + tableWidth - 24;
   const totalPrize = rows.reduce((sum, row) => sum + row.prize, 0);
+  const palette =
+    theme === "light"
+      ? {
+          background: "#ffffff",
+          summary: "#ffffff",
+          text: "#111111",
+          border: "#9ca3af",
+          rows: ["#ffffff", "#dedede"],
+        }
+      : {
+          background: "#000000",
+          summary: "#0b0b0b",
+          text: "#f9fafb",
+          border: "#4b5563",
+          rows: ["#0f0f10", "#151618"],
+        };
 
   canvas.width = tableWidth + padding * 2;
   canvas.height = totalHeight;
 
-  context.fillStyle = "#000000";
+  context.fillStyle = palette.background;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  context.fillStyle = "#0b0b0b";
+  context.fillStyle = palette.summary;
   context.fillRect(padding, padding, tableWidth, headerHeight);
 
-  context.strokeStyle = "#4b5563";
+  context.strokeStyle = palette.border;
   context.lineWidth = 1.5;
   context.strokeRect(padding, padding, tableWidth, headerHeight);
 
-  context.fillStyle = "#f9fafb";
+  context.fillStyle = palette.text;
   context.font = "400 19px Arial";
   context.fillText(formatSummaryDate(selectedDate), tableX + 18, padding + 34);
 
-  context.fillStyle = "#f9fafb";
+  context.fillStyle = palette.text;
   context.font = "500 70px Arial";
   context.fillText(`${drawName} Draw`, tableX + 18, padding + 114);
 
   context.font = "500 52px Arial";
   context.fillText(winningCombination || "-", tableX + 18, padding + 186);
 
-  context.fillStyle = "#f9fafb";
+  context.fillStyle = palette.text;
   context.font = "500 17px Arial";
   drawRightText(
     context,
@@ -360,7 +382,7 @@ const renderWinnerImageCanvas = async ({
     300,
   );
 
-  context.fillStyle = "#f9fafb";
+  context.fillStyle = palette.text;
 
   context.font = `500 ${totalPrize > 1000000 ? "28px" : totalPrize > 100000 ? "40px" : "56px"} Arial`;
   drawRightText(
@@ -371,11 +393,11 @@ const renderWinnerImageCanvas = async ({
     380,
   );
 
-  context.fillStyle = "#f9fafb";
+  context.fillStyle = palette.text;
   context.font = "italic 400 16px Arial";
   drawRightText(context, "Total Prize", summaryRightX, padding + 176, 200);
 
-  context.strokeStyle = "#4b5563";
+  context.strokeStyle = palette.border;
   context.lineWidth = 1;
   context.beginPath();
   context.moveTo(tableX + 18, padding + 52);
@@ -397,7 +419,7 @@ const renderWinnerImageCanvas = async ({
   context.fillStyle = "#facc15";
   context.fillRect(tableX, tableY, tableWidth, tableHeaderHeight);
 
-  context.font = "500 15px Arial";
+  context.font = "500 21px Arial";
   context.fillStyle = "#000000";
   let cursorX = tableX;
   headers.forEach((header, index) => {
@@ -413,11 +435,11 @@ const renderWinnerImageCanvas = async ({
 
   rows.forEach((row, index) => {
     const y = tableY + tableHeaderHeight + index * rowHeight;
-    context.fillStyle = index % 2 === 0 ? "#0f0f10" : "#151618";
+    context.fillStyle = palette.rows[index % 2];
     context.fillRect(tableX, y, tableWidth, rowHeight);
 
-    context.fillStyle = "#f9fafb";
-    context.font = "400 14px Arial";
+    context.fillStyle = palette.text;
+    context.font = "400 20px Arial";
 
     const values = [
       row.admin,
@@ -440,7 +462,7 @@ const renderWinnerImageCanvas = async ({
     });
   });
 
-  context.strokeStyle = "#4b5563";
+  context.strokeStyle = palette.border;
   context.lineWidth = 1;
   context.strokeRect(
     tableX,
@@ -498,6 +520,21 @@ export const createWinnerImageAsset = async (
       downloadLink.download = fileName;
       downloadLink.click();
     },
+    downloadExcel: async () => {
+      await generateWinnerExcelFile({
+        rows: options.rows.map((row) => ({
+          Admin: row.admin,
+          "Bettor Name": row.bettorName,
+          Bet: row.bet,
+          Remarks: row.remarks,
+          Prize: row.prize,
+        })),
+        fileName: fileName.replace(/\.png$/i, ""),
+        selectedDate: options.selectedDate,
+        drawName: options.drawName,
+        winningCombination: options.winningCombination,
+      });
+    },
     revoke: () => URL.revokeObjectURL(imageUrl),
   };
 };
@@ -508,63 +545,66 @@ export const mapWinnerRows = (
 ): WinnerImageRow[] => {
   const { remarksGetter, twoDSpecialContext = null } = options;
 
-  return bets.map((item) => {
-    const betType = getSingleRelation(item.bet_types);
-    const profile = getSingleRelation(item.profiles);
-    const betAmount = Number(item.bet_amount ?? 0);
-    const prizeAmount = Number(item.prize_amount ?? 0);
-    const betTypeCode = (betType?.code ?? "").toUpperCase();
-    const combination = item.combination ?? "";
-    const combinationArr = combination.split("-").map(Number);
-    const isTrio =
-      combinationArr.length === 3 &&
-      combinationArr[0] === combinationArr[1] &&
-      combinationArr[1] === combinationArr[2];
+  return (
+    bets
+      .map((item) => {
+        const betType = getSingleRelation(item.bet_types);
+        const profile = getSingleRelation(item.profiles);
+        const betAmount = Number(item.bet_amount ?? 0);
+        const prizeAmount = Number(item.prize_amount ?? 0);
+        const betTypeCode = (betType?.code ?? "").toUpperCase();
+        const combination = item.combination ?? "";
+        const combinationArr = combination.split("-").map(Number);
+        const isTrio =
+          combinationArr.length === 3 &&
+          combinationArr[0] === combinationArr[1] &&
+          combinationArr[1] === combinationArr[2];
 
-    const betTypeName =
-      betType?.name === "Rambolito"
-        ? isRambolito3(combinationArr)
-          ? "Rambolito 3"
-          : "Rambolito 6"
-        : isTrio
-          ? "Trio"
-          : (betType?.name ?? "Normal Bet");
+        const betTypeName =
+          betType?.name === "Rambolito"
+            ? isRambolito3(combinationArr)
+              ? "Rambolito 3"
+              : "Rambolito 6"
+            : isTrio
+              ? "Trio"
+              : (betType?.name ?? "Normal Bet");
 
-    const twoDLabel = getTwoDSpecialWinnerLabel(
-      twoDSpecialContext,
-      combination,
-      betType?.code || "",
-    );
+        const twoDLabel = getTwoDSpecialWinnerLabel(
+          twoDSpecialContext,
+          combination,
+          betType?.code || "",
+        );
 
-    const defaultRemark = item.is_return_bet
-      ? "RETURN BET"
-      : item.is_super_jackpot
-        ? "X3 SUPER JACKPOT"
-        : "JACKPOT";
+        const defaultRemark = item.is_return_bet
+          ? "RETURN BET"
+          : item.is_super_jackpot
+            ? "X3 SUPER JACKPOT"
+            : "JACKPOT";
 
-    const baseRemark = (
-      remarksGetter?.(item) ||
-      defaultRemark ||
-      betTypeName ||
-      betTypeCode ||
-      "-"
-    ).toUpperCase();
-    const remarks = twoDLabel ? `${baseRemark} - ${twoDLabel}` : baseRemark;
+        const baseRemark = (
+          remarksGetter?.(item) ||
+          defaultRemark ||
+          betTypeName ||
+          betTypeCode ||
+          "-"
+        ).toUpperCase();
+        const remarks = twoDLabel ? `${baseRemark} - ${twoDLabel}` : baseRemark;
 
-    return {
-      admin: profile?.full_name || "-",
-      bettorName: item.bettor_name || "-",
-      bet: `${combination || "-"}=${betAmount === 0 ? "" : betAmount}${betTypeCode}`,
-      remarks,
-      prize: prizeAmount,
-    };
-  })
-    // Group by admin, then alphabetize bettor names within each admin group.
-    .sort(
-      (a, b) =>
-        a.admin.localeCompare(b.admin) ||
-        a.bettorName.localeCompare(b.bettorName),
-    );
+        return {
+          admin: profile?.full_name || "-",
+          bettorName: item.bettor_name || "-",
+          bet: `${combination || "-"}=${betAmount === 0 ? "" : betAmount}${betTypeCode}`,
+          remarks,
+          prize: prizeAmount,
+        };
+      })
+      // Group by admin, then alphabetize bettor names within each admin group.
+      .sort(
+        (a, b) =>
+          a.admin.localeCompare(b.admin) ||
+          a.bettorName.localeCompare(b.bettorName),
+      )
+  );
 };
 
 export const fetchWinnerRows = async ({

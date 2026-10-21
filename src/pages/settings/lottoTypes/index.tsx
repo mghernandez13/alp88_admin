@@ -3,7 +3,7 @@ import AdminTemplate from "../../../templates/AdminTemplate";
 import DataTable from "../../../components/generic/table";
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  GET_LOTTO_TYPES,
+  GET_LOTTO_TYPE_OPTIONS,
   UPDATE_LOTTO_TYPE,
   BULK_UPDATE_LOTTO_STATUS,
 } from "../../../graphql/queries/lotto";
@@ -77,7 +77,7 @@ const LottoTypesPage: React.FC = () => {
   const { data, loading, error } = useQuery<
     LottoQueryData,
     LottoQueryVariables
-  >(GET_LOTTO_TYPES, {
+  >(GET_LOTTO_TYPE_OPTIONS, {
     variables: {
       first: pageSize,
       offset,
@@ -93,7 +93,7 @@ const LottoTypesPage: React.FC = () => {
     {
       refetchQueries: [
         {
-          query: GET_LOTTO_TYPES,
+          query: GET_LOTTO_TYPE_OPTIONS,
           variables: {
             first: pageSize,
             offset,
@@ -110,7 +110,7 @@ const LottoTypesPage: React.FC = () => {
     {
       refetchQueries: [
         {
-          query: GET_LOTTO_TYPES,
+          query: GET_LOTTO_TYPE_OPTIONS,
           variables: {
             first: pageSize,
             offset,
@@ -124,7 +124,7 @@ const LottoTypesPage: React.FC = () => {
 
   // Static game type filter: only 2D, 3D, LP3, but counts from all lotto types (unfiltered)
   const allLottoTypes = useQuery<LottoQueryData, LottoQueryVariables>(
-    GET_LOTTO_TYPES,
+    GET_LOTTO_TYPE_OPTIONS,
     {
       variables: {
         first: 1000, // large enough to get all
@@ -213,7 +213,7 @@ const LottoTypesPage: React.FC = () => {
 
       return createPortal(
         <div
-          className="w-40 bg-[#222222] border border-gray-600 rounded shadow-lg z-20 days-popup-floating"
+          className="w-40 bg-white dark:bg-[#222222] text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded shadow-lg z-20 days-popup-floating"
           style={{
             position: "absolute",
             top: popupPos.top,
@@ -231,12 +231,12 @@ const LottoTypesPage: React.FC = () => {
                       <Check className="w-3 h-3 text-yellow-500" />
                     </div>
                   ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-white-500 flex items-center justify-center">
-                      <X className="w-3 h-3 text-white-500" />
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-500 dark:border-white-500 dark:border-gray-200 flex items-center justify-center">
+                      <X className="w-3 h-3 text-gray-700 dark:text-white-500 dark:text-white" />
                     </div>
                   )}
                   <span
-                    className={`text-sm ${active ? "text-yellow-500" : "text-white-500"}`}
+                    className={`text-sm ${active ? "text-yellow-500" : "text-gray-700 dark:text-white-500 dark:text-white"}`}
                   >
                     {d}
                   </span>
@@ -380,10 +380,10 @@ const LottoTypesPage: React.FC = () => {
                   <Eye className="w-5 h-5" />
                 </IconTableActionButton>
                 <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                  <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                  <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                     View
                   </span>
-                  <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                  <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
                 </div>
               </div>
               <div className="relative flex flex-col items-center group">
@@ -396,10 +396,10 @@ const LottoTypesPage: React.FC = () => {
                   <SquarePen className="w-5 h-5" />
                 </IconTableActionButton>
                 <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                  <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                  <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                     Edit
                   </span>
-                  <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                  <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
                 </div>
               </div>
               <div className="relative flex flex-col items-center group">
@@ -410,10 +410,10 @@ const LottoTypesPage: React.FC = () => {
                   <Trash2 className="w-5 h-5" />
                 </IconTableActionButton>
                 <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                  <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                  <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                     Delete
                   </span>
-                  <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                  <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
                 </div>
               </div>
             </td>

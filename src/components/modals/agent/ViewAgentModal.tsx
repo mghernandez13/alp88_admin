@@ -142,16 +142,16 @@ const ViewAgentModal: React.FC<ViewAgentModalProps> = (props) => {
               damping: 25,
               mass: 0.8,
             }}
-            className="themed-scrollbar relative bg-black border border-gray-700 w-full max-w-2xl p-8 rounded-lg shadow-2xl z-[70] max-h-[90vh] overflow-y-auto"
+            className="themed-scrollbar relative bg-white dark:bg-black border border-gray-200 dark:border-gray-700 w-full max-w-2xl p-8 rounded-lg shadow-2xl z-[70] max-h-[90vh] overflow-y-auto"
           >
             <div>
               <button
                 onClick={onClose}
-                className="absolute bg-transparent top-4 right-4 text-white hover:border-none hover:text-gray-600"
+                className="absolute bg-transparent top-4 right-4 text-gray-900 dark:text-white hover:border-none hover:text-gray-600"
               >
                 <X size={20} />
               </button>
-              <div className="flex flex-col items-center mb-8 p-4 bg-[#16191d] rounded-lg border border-gray-700 mt-10">
+              <div className="flex flex-col items-center mb-8 p-4 bg-gray-50 dark:bg-[#16191d] rounded-lg border border-gray-200 dark:border-gray-700 mt-10">
                 <div className="relative w-24 h-24 mb-4">
                   {formData.avatarUrl &&
                   formData.avatarUrl !== "null" &&
@@ -162,8 +162,8 @@ const ViewAgentModal: React.FC<ViewAgentModalProps> = (props) => {
                       alt="Avatar"
                     />
                   ) : (
-                    <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-500">
-                      <User className="text-gray-400 w-10 h-10" />
+                    <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-500">
+                      <User className="text-gray-600 dark:text-gray-400 w-10 h-10" />
                     </div>
                   )}
                 </div>
@@ -215,7 +215,7 @@ const ViewAgentModal: React.FC<ViewAgentModalProps> = (props) => {
                       name="roleName"
                       value={formData.roleName}
                       disabled={true}
-                      className="bg-[#16191d] border border-gray-600 text-white w-full p-2 rounded-md"
+                      className="bg-white dark:bg-[#16191d] border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white w-full p-2 rounded-md"
                       required
                     />
                   </div>
@@ -265,11 +265,11 @@ const ViewAgentModal: React.FC<ViewAgentModalProps> = (props) => {
                       name="isQuotaBased"
                       disabled={true}
                       checked={formData.isQuotaBased}
-                      className="w-5 h-5 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+                      className="w-5 h-5 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
                     />
                     <label
                       htmlFor="isActive"
-                      className="text-gray-300 font-medium cursor-pointer"
+                      className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer"
                     >
                       Is Quota Based?
                     </label>
@@ -281,11 +281,11 @@ const ViewAgentModal: React.FC<ViewAgentModalProps> = (props) => {
                       name="isActive"
                       disabled={true}
                       checked={formData.isActive}
-                      className="w-5 h-5 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+                      className="w-5 h-5 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
                     />
                     <label
                       htmlFor="isActive"
-                      className="text-gray-300 font-medium cursor-pointer"
+                      className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer"
                     >
                       Is Active
                     </label>

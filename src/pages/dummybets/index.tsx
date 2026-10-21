@@ -128,9 +128,10 @@ const DummyBetsPage: React.FC = () => {
       const escapedSearchQuery = trimmedSearchQuery
         .replace(/[%_]/g, "\\$&")
         .replace(/[(),]/g, "");
-      const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        trimmedSearchQuery,
-      );
+      const looksLikeUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          trimmedSearchQuery,
+        );
 
       const searchFilter = looksLikeUuid
         ? `id.eq.${trimmedSearchQuery},combination.ilike.%${escapedSearchQuery}%,bettor_name.ilike.%${escapedSearchQuery}%`
@@ -436,10 +437,10 @@ const DummyBetsPage: React.FC = () => {
                 <Eye className="w-5 h-5" />
               </IconTableActionButton>
               <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                   View
                 </span>
-                <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
               </div>
             </div>
           </td>

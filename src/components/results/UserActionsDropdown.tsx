@@ -369,14 +369,14 @@ const UserActionsDropdown: React.FC<UserActionsDropdownProps> = ({
   return (
     <div className="relative" ref={actionsMenuRef}>
       <button
-        className="bg-black text-white px-4 py-2 rounded hover:bg-gray-700 flex"
+        className="bg-white dark:bg-black text-gray-900 dark:text-white px-4 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex"
         onClick={() => setActionsOpen((v) => !v)}
       >
         User Actions
         <ChevronDown />
       </button>
       {actionsOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-black border border-gray-700 rounded shadow-lg z-20 text-sm text-white">
+        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded shadow-lg z-20 text-sm text-gray-900 dark:text-white">
           <ul className="py-1">
             <li
               className="px-4 py-2 cursor-pointer transition-colors duration-150 hover:bg-yellow-600"

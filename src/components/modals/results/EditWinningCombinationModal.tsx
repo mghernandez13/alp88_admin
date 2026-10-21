@@ -158,14 +158,14 @@ const EditWinningCombinationModal: React.FC<
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-black border border-gray-700 w-full max-w-md p-8 rounded-lg shadow-2xl z-[70]">
+      <div className="relative bg-white dark:bg-black border border-gray-200 dark:border-gray-700 w-full max-w-md p-8 rounded-lg shadow-2xl z-[70]">
         <button
-          className="absolute top-3 right-3 text-white hover:text-gray-400 bg-transparent"
+          className="absolute top-3 right-3 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-400 bg-transparent"
           onClick={onClose}
         >
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-xl font-bold mb-6 text-white">
+        <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">
           Edit Winning Combination
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -206,7 +206,7 @@ const EditWinningCombinationModal: React.FC<
           <div className="flex justify-end gap-3 mt-4">
             <button
               type="button"
-              className="px-4 py-2 bg-gray-500 text-white rounded"
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-500 text-gray-900 dark:text-white rounded"
               onClick={onClose}
               disabled={loading}
             >

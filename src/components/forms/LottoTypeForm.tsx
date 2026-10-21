@@ -140,7 +140,7 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
   return (
     <form
       onSubmit={onSubmit}
-      className="bg-black p-8 rounded-lg border border-gray-700 shadow-2xl"
+      className="bg-white dark:bg-black p-8 rounded-lg border border-gray-200 dark:border-gray-700 shadow-2xl"
     >
       <div className="flex flex-col md:flex-row md:flex-wrap gap-6">
         <div className="flex w-full">
@@ -148,7 +148,7 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
           <div className="flex flex-col gap-2 w-full">
             <Label>Logo Image</Label>
             <div
-              className={`flex flex-col items-center justify-center gap-2 border-2 ${dragActive ? "border-yellow-500 bg-yellow-900/10" : "border-gray-600 bg-[#16191d]"} border-dashed rounded-md p-4 relative transition-colors`}
+              className={`flex flex-col items-center justify-center gap-2 border-2 ${dragActive ? "border-yellow-500 bg-yellow-900/10" : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#16191d]"} border-dashed rounded-md p-4 relative transition-colors`}
               onDragEnter={handleDrag}
               onDragOver={handleDrag}
               onDragLeave={handleDrag}
@@ -166,13 +166,13 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
                 <>
                   <button
                     type="button"
-                    className="px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+                    className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-200 dark:hover:bg-gray-600"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                   >
                     {uploading ? "Uploading..." : "Upload or Drag Image"}
                   </button>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
                     PNG, JPG, max 2MB
                   </span>
                   {errorMsg && (
@@ -185,7 +185,7 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
                   <img
                     src={formData.logo_image}
                     alt="Logo Preview"
-                    className="w-24 h-24 object-contain border border-gray-600 rounded bg-white"
+                    className="w-24 h-24 object-contain border border-gray-300 dark:border-gray-600 rounded bg-white"
                   />
                   <button
                     type="button"
@@ -214,7 +214,7 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
                 name="gameType"
                 value={formData.gameType}
                 onChange={onChange}
-                className="bg-[#16191d] border border-gray-600 text-white w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none appearance-none cursor-pointer"
+                className="bg-white dark:bg-[#16191d] border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none appearance-none cursor-pointer"
                 required
               >
                 <option value="" disabled>
@@ -248,7 +248,7 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
                 name="drawTime"
                 value={formData.drawTime}
                 onChange={onChange}
-                className="bg-[#16191d] border border-gray-600 text-white w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none appearance-none cursor-pointer"
+                className="bg-white dark:bg-[#16191d] border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none appearance-none cursor-pointer"
               >
                 <option value="" disabled>
                   Select time
@@ -271,7 +271,7 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
                 name="cutoffTime"
                 value={formData.cutoffTime}
                 onChange={onChange}
-                className="bg-[#16191d] border border-gray-600 text-white w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none appearance-none cursor-pointer"
+                className="bg-white dark:bg-[#16191d] border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none appearance-none cursor-pointer"
               >
                 <option value="" disabled>
                   Select time
@@ -339,9 +339,9 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
                     value={day}
                     checked={formData.daysActive.includes(day)}
                     onChange={onChange}
-                    className="w-4 h-4 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+                    className="w-4 h-4 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
                   />
-                  <label className="text-gray-300 font-medium cursor-pointer">
+                  <label className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer">
                     {day.slice(0, 3)}
                   </label>
                 </div>
@@ -354,9 +354,9 @@ const LottoTypeForm: React.FC<LottoTypeFormProps> = ({
               name="isActive"
               checked={formData.isActive}
               onChange={onChange}
-              className="w-5 h-5 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+              className="w-5 h-5 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
             />
-            <label className="text-gray-300 font-medium cursor-pointer">
+            <label className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer">
               Active
             </label>
           </div>

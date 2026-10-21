@@ -130,9 +130,9 @@ const MyProfilePage: React.FC = () => {
         </div>
         <form
           onSubmit={handleSubmit}
-          className="bg-black p-8 rounded-lg border border-gray-700 shadow-2xl mx-auto"
+          className="bg-white dark:bg-black p-8 rounded-lg border border-gray-200 dark:border-gray-700 shadow-2xl mx-auto"
         >
-          <div className="flex flex-col items-center mb-8 p-4 bg-[#16191d] rounded-lg border border-gray-700">
+          <div className="flex flex-col items-center mb-8 p-4 bg-gray-50 dark:bg-[#16191d] rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="relative w-24 h-24 mb-4">
               {formData.avatarUrl &&
               formData.avatarUrl !== "null" &&
@@ -143,7 +143,7 @@ const MyProfilePage: React.FC = () => {
                   alt="Avatar"
                 />
               ) : (
-                <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-500">
+                <div className="w-full h-full rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-500">
                   <span className="text-yellow-500 bg-yellow-500 text-2xl">
                     👤
                   </span>
@@ -155,7 +155,7 @@ const MyProfilePage: React.FC = () => {
                 </div>
               )}
             </div>
-            <label className="cursor-pointer bg-gray-700 hover:bg-gray-600 text-white text-xs px-4 py-2 rounded-md transition-colors flex items-center gap-2">
+            <label className="cursor-pointer bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-xs px-4 py-2 rounded-md transition-colors flex items-center gap-2">
               Upload Profile Image
               <input
                 type="file"

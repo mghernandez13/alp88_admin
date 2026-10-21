@@ -1,5 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
-import App from "./App";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Login from "./pages/login";
 import AgentsPage from "./pages/agents";
 import CreateAgentPage from "./pages/agents/create";
@@ -24,18 +23,15 @@ import BetsPage from "./pages/bets";
 import DummyBetsPage from "./pages/dummybets";
 import ResultsDetailsPage from "./pages/results/details";
 import SummaryPage from "./pages/summary";
-import DashboardPage from "./pages/dashboard";
 import NotificationsPage from "./pages/notifications";
+import DummyResultsPage from "./pages/dummyresults";
+import DummyResultDetailsPage from "./pages/dummyresults/details";
 
 export const router = createBrowserRouter([
-  { path: "/", element: <App /> },
+  { path: "/", element: <Navigate to="/summary" replace /> },
   {
     path: "/login",
     element: <Login />,
-  },
-  {
-    path: "/dashboard",
-    element: <DashboardPage />,
   },
   {
     path: "/summary",
@@ -124,6 +120,14 @@ export const router = createBrowserRouter([
   {
     path: "/dummy-bets",
     element: <DummyBetsPage />,
+  },
+  {
+    path: "/dummy-results",
+    element: <DummyResultsPage />,
+  },
+  {
+    path: "/dummy-results/details/:resultId",
+    element: <DummyResultDetailsPage />,
   },
   {
     path: "/results/details/:resultId",

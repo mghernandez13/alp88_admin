@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client/react";
 import React, { useEffect, useState } from "react";
 import type { LottoQueryData, LottoQueryVariables } from "../../types/api";
-import { GET_LOTTO_TYPES } from "../../graphql/queries/lotto";
+import { GET_LOTTO_TYPE_OPTIONS } from "../../graphql/queries/lotto";
 import type { BetsSummaryProps } from "../../types/generic";
 import {
   getDayNameFromDateString,
@@ -18,6 +18,7 @@ import {
 } from "../../utils/winners";
 import Swal from "sweetalert2";
 import WinnerImagePreviewModal from "../modals/results/WinnerImagePreviewModal.tsx";
+import { formatCurrency } from "../../utils/currency.ts";
 
 interface SummaryResponse {
   byLottoTypeId?: Record<string, Partial<DrawStats>>;
@@ -68,7 +69,7 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
   const { data: lottoTypesData, loading } = useQuery<
     LottoQueryData,
     LottoQueryVariables
-  >(GET_LOTTO_TYPES, {
+  >(GET_LOTTO_TYPE_OPTIONS, {
     variables: {
       first: 100,
       offset: 0,
@@ -247,7 +248,7 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         <div
           key={"overall"}
-          className="bg-[#222222] rounded-xl shadow-lg p-4 flex flex-col items-center"
+          className="bg-gray-100 dark:bg-[#222222] rounded-xl shadow-lg p-4 flex flex-col items-center"
         >
           {/* Lotto Logo */}
           <img
@@ -258,7 +259,7 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
             style={{ filter: "drop-shadow(0 0 8px #000)" }}
           />
           {/* Draw Date */}
-          <div className="text-gray-200 text-center text-sm mb-4">
+          <div className="text-gray-700 dark:text-gray-200 text-center text-sm mb-4">
             {humanizeDateString(selectedDate)}
           </div>
           <PrimaryButton
@@ -277,19 +278,21 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
           </PrimaryButton>
           {/* Stats Grid */}
           <div className="w-full grid grid-cols-1 gap-2 mt-5">
-            <div className="bg-black rounded p-2 flex flex-col items-center">
-              <span className="text-xs text-gray-400">Total Bets</span>
-              <span className="text-lg font-bold text-white">
+            <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Total Bets
+              </span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {loading || statsLoading ? (
                   <Skeleton className="mt-2" width={50} height={40} />
                 ) : (
-                  overallStats.totalBets
+                  formatCurrency(overallStats.totalBets, false)
                 )}
               </span>
             </div>
-            {/* <div className="bg-black rounded p-2 flex flex-col items-center">
-              <span className="text-xs text-gray-400">Combinations</span>
-              <span className="text-lg font-bold text-white">
+            {/* <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+              <span className="text-xs text-gray-600 dark:text-gray-400">Combinations</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {loading || statsLoading ? (
                   <Skeleton className="mt-2" width={50} height={40} />
                 ) : (
@@ -297,39 +300,47 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
                 )}
               </span>
             </div> */}
-            <div className="bg-black rounded p-2 flex flex-col items-center">
-              <span className="text-xs text-gray-400">Winners</span>
-              <span className="text-lg font-bold text-white">
+            <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Winners
+              </span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {overallStats.jackpotWinners}
               </span>
             </div>
-            <div className="bg-black rounded p-2 flex flex-col items-center">
-              <span className="text-xs text-gray-400">Net Sales</span>
-              <span className="text-lg font-bold text-white">
+            <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Net Sales
+              </span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {loading || statsLoading ? (
                   <Skeleton className="mt-2" width={50} height={40} />
                 ) : (
-                  overallStats.totalNetSales
+                  formatCurrency(overallStats.totalNetSales, false)
                 )}
               </span>
             </div>
-            <div className="bg-black rounded p-2 flex flex-col items-center">
-              <span className="text-xs text-gray-400">Remittance</span>
-              <span className="text-lg font-bold text-white">
+            <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Remittance
+              </span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {loading || statsLoading ? (
                   <Skeleton className="mt-2" width={50} height={40} />
                 ) : (
-                  overallStats.totalRemittance
+                  formatCurrency(overallStats.totalRemittance, false)
                 )}
               </span>
             </div>
-            <div className="bg-black rounded p-2 flex flex-col items-center">
-              <span className="text-xs text-gray-400">Total Prize</span>
-              <span className="text-lg font-bold text-white">
+            <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Total Prize
+              </span>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {loading || statsLoading ? (
                   <Skeleton className="mt-2" width={50} height={40} />
                 ) : (
-                  overallStats.totalJackpotAmount
+                  formatCurrency(overallStats.totalJackpotAmount, false)
                 )}
               </span>
             </div>
@@ -342,7 +353,7 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
           return (
             <div
               key={idx}
-              className="bg-[#222222] rounded-xl shadow-lg p-4 flex flex-col items-center"
+              className="bg-gray-100 dark:bg-[#222222] rounded-xl shadow-lg p-4 flex flex-col items-center"
             >
               {/* Lotto Logo */}
               <img
@@ -353,7 +364,7 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
                 style={{ filter: "drop-shadow(0 0 8px #000)" }}
               />
               {/* Draw Date */}
-              <div className="text-gray-200 text-center text-sm mb-4">
+              <div className="text-gray-700 dark:text-gray-200 text-center text-sm mb-4">
                 {humanizeDateString(selectedDate)}
               </div>
               <PrimaryButton
@@ -376,19 +387,23 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
               </PrimaryButton>
               {/* Stats Grid */}
               <div className="w-full grid grid-cols-1 gap-2 mt-5">
-                <div className="bg-black rounded p-2 flex flex-col items-center">
-                  <span className="text-xs text-gray-400">Total Bets</span>
-                  <span className="text-lg font-bold text-white">
+                <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    Total Bets
+                  </span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
                     {loading || statsLoading ? (
                       <Skeleton className="mt-2" width={50} height={40} />
                     ) : (
-                      lottoStats.totalBets
+                      formatCurrency(lottoStats.totalBets, false)
                     )}
                   </span>
                 </div>
-                <div className="bg-black rounded p-2 flex flex-col items-center">
-                  <span className="text-xs text-gray-400">Combinations</span>
-                  <span className="text-lg font-bold text-white">
+                <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    Combinations
+                  </span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
                     {loading || statsLoading ? (
                       <Skeleton className="mt-2" width={50} height={40} />
                     ) : (
@@ -396,39 +411,47 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
                     )}
                   </span>
                 </div>
-                <div className="bg-black rounded p-2 flex flex-col items-center">
-                  <span className="text-xs text-gray-400">Winners</span>
-                  <span className="text-lg font-bold text-white">
+                <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    Winners
+                  </span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
                     {lottoStats.jackpotWinners}
                   </span>
                 </div>
-                <div className="bg-black rounded p-2 flex flex-col items-center">
-                  <span className="text-xs text-gray-400">Net Sales</span>
-                  <span className="text-lg font-bold text-white">
+                <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    Net Sales
+                  </span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
                     {loading || statsLoading ? (
                       <Skeleton className="mt-2" width={50} height={40} />
                     ) : (
-                      lottoStats.totalNetSales
+                      formatCurrency(lottoStats.totalNetSales, false)
                     )}
                   </span>
                 </div>
-                <div className="bg-black rounded p-2 flex flex-col items-center">
-                  <span className="text-xs text-gray-400">Remittance</span>
-                  <span className="text-lg font-bold text-white">
+                <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    Remittance
+                  </span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
                     {loading || statsLoading ? (
                       <Skeleton className="mt-2" width={50} height={40} />
                     ) : (
-                      lottoStats.totalRemittance
+                      formatCurrency(lottoStats.totalRemittance, false)
                     )}
                   </span>
                 </div>
-                <div className="bg-black rounded p-2 flex flex-col items-center">
-                  <span className="text-xs text-gray-400">Total Prize</span>
-                  <span className="text-lg font-bold text-white">
+                <div className="bg-white dark:bg-black rounded p-2 flex flex-col items-center">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    Total Prize
+                  </span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
                     {loading || statsLoading ? (
                       <Skeleton className="mt-2" width={50} height={40} />
                     ) : (
-                      lottoStats.totalJackpotAmount
+                      formatCurrency(lottoStats.totalJackpotAmount, false)
                     )}
                   </span>
                 </div>
@@ -445,6 +468,7 @@ const BetsSummary: React.FC<BetsSummaryProps> = ({
         fileName={previewAsset?.fileName ?? ""}
         onClose={closePreview}
         onDownload={() => previewAsset?.download()}
+        onDownloadExcel={() => previewAsset?.downloadExcel()}
       />
     </div>
   );

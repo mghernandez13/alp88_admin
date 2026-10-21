@@ -111,16 +111,18 @@ const UpdateBetPrizeModal: React.FC<UpdateBetPrizeModalProps> = ({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="themed-scrollbar relative bg-black border border-gray-700 max-h-[100vh] w-full max-w-md p-8 rounded-lg shadow-2xl z-[70] overflow-y-auto">
+      <div className="themed-scrollbar relative bg-white dark:bg-black border border-gray-200 dark:border-gray-700 max-h-[100vh] w-full max-w-md p-8 rounded-lg shadow-2xl z-[70] overflow-y-auto">
         <button
-          className="absolute top-3 right-3 text-white hover:text-gray-400 bg-transparent"
+          className="absolute top-3 right-3 text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-400 bg-transparent"
           onClick={onClose}
         >
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-xl font-bold mb-6 text-white">Update Bet Prize</h2>
+        <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">
+          Update Bet Prize
+        </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <div className="flex flex-col gap-4 p-4 rounded-lg border border-gray-700 bg-[#16191d]">
+          <div className="flex flex-col gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#16191d]">
             <div className="flex w-full gap-4">
               <div className="flex flex-col gap-2 w-full md:w-1/2">
                 <Label>Game Type</Label>
@@ -212,9 +214,9 @@ const UpdateBetPrizeModal: React.FC<UpdateBetPrizeModalProps> = ({
                 type="checkbox"
                 checked={!!superJackpot}
                 onChange={(e) => setSuperJackpot(e.target.checked)}
-                className="w-5 h-5 accent-blue-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+                className="w-5 h-5 accent-blue-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
               />
-              <label className="text-gray-300 font-medium cursor-pointer">
+              <label className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer">
                 Enable Super Jackpot
               </label>
             </div>

@@ -7,14 +7,32 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
+  color: #111827;
+  background-color: #f3f4f6;
+  --theme-modal-background: #ffffff;
+  --theme-modal-foreground: #111827;
+  --theme-checkbox-background: #e5e7eb;
+  --theme-scrollbar-track: #f3f4f6;
+  --theme-scrollbar-thumb: #9ca3af;
+  --theme-scrollbar-hover: #6b7280;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root.dark {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+  --theme-modal-background: #222222;
+  --theme-modal-foreground: #ffffff;
+  --theme-checkbox-background: #374151;
+  --theme-scrollbar-track: #111827;
+  --theme-scrollbar-thumb: #4b5563;
+  --theme-scrollbar-hover: #6b7280;
 }
 
 a {
@@ -52,7 +70,7 @@ button:focus-visible {
 
 .themed-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #4b5563 #111827;
+  scrollbar-color: var(--theme-scrollbar-thumb) var(--theme-scrollbar-track);
 }
 
 .themed-scrollbar::-webkit-scrollbar {
@@ -61,39 +79,26 @@ button:focus-visible {
 }
 
 .themed-scrollbar::-webkit-scrollbar-track {
-  background: #111827;
+  background: var(--theme-scrollbar-track);
   border-radius: 9999px;
 }
 
 .themed-scrollbar::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: var(--theme-scrollbar-thumb);
   border-radius: 9999px;
-  border: 2px solid #111827;
+  border: 2px solid var(--theme-scrollbar-track);
 }
 
 .themed-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: var(--theme-scrollbar-hover);
 }
 
 .swal2-modal {
-  background-color: #222222 !important;
-  color: white;
+  background-color: var(--theme-modal-background) !important;
+  color: var(--theme-modal-foreground) !important;
 }
 
 button.swal2-confirm {
   background-color: rgb(202 138 4) !important;
   color: white !important;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }

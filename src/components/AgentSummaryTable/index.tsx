@@ -13,7 +13,7 @@ import PrimaryButton from "../generic/buttons/Primary";
 import { generateExcelFile } from "../../utils/excel";
 import { getDayNameFromDateString } from "../../utils/datetime";
 import { useQuery } from "@apollo/client/react";
-import { GET_LOTTO_TYPES } from "../../graphql/queries/lotto";
+import { GET_LOTTO_TYPE_OPTIONS } from "../../graphql/queries/lotto";
 
 type DrawSlot = "2PM" | "5PM" | "9PM";
 
@@ -177,7 +177,7 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
   const { data: lottoTypesData, loading: lp3Loading } = useQuery<
     LottoQueryData,
     LottoQueryVariables
-  >(GET_LOTTO_TYPES, {
+  >(GET_LOTTO_TYPE_OPTIONS, {
     variables: {
       first: 1,
       offset: 0,
@@ -244,7 +244,9 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
             compareAgentProfiles(a.admin, b.admin),
           ),
         }))
-        .sort((a, b) => compareAgentProfiles(a.headAdmin.headAdmin, b.headAdmin.headAdmin)),
+        .sort((a, b) =>
+          compareAgentProfiles(a.headAdmin.headAdmin, b.headAdmin.headAdmin),
+        ),
     [agentRows],
   );
 
@@ -301,7 +303,7 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
         key={profile?.id}
         className={[
           isHead ? "font-semibold" : "",
-          isHovered ? "bg-[#222910]" : "",
+          isHovered ? "bg-[#f3f6dc] dark:bg-[#222910]" : "",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -510,11 +512,11 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
         </PrimaryButton>
       </div>
       <div
-        className="overflow-x-auto rounded-lg border border-gray-700"
+        className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <table className="min-w-[1200px] text-sm text-left text-gray-300">
-          <thead className="sticky top-0 z-20 bg-[#222222] text-gray-400 text-xs uppercase">
+        <table className="min-w-[1200px] text-sm text-left text-gray-700 dark:text-gray-300">
+          <thead className="sticky top-0 z-20 bg-gray-100 dark:bg-[#222222] text-gray-600 dark:text-gray-400 text-xs uppercase">
             <tr>
               <th className="px-4 py-2" rowSpan={3}>
                 Head Admin
@@ -627,7 +629,7 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
             {loading && (
               <tr>
                 <td
-                  className="px-4 py-3 text-center text-gray-400"
+                  className="px-4 py-3 text-center text-gray-600 dark:text-gray-400"
                   colSpan={30}
                 >
                   <LoadingSpinner width={40} height={40} />
@@ -637,7 +639,7 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
             {!loading && agentRows.length === 0 && (
               <tr>
                 <td
-                  className="px-4 py-3 text-center text-gray-500"
+                  className="px-4 py-3 text-center text-gray-600 dark:text-gray-400"
                   colSpan={30}
                 >
                   No agent rows found.
@@ -665,8 +667,8 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
                     })}
                     <tr
                       className={[
-                        "font-bold border-t border-gray-600",
-                        isHovered ? "bg-[#222910]" : "",
+                        "font-bold border-t border-gray-300 dark:border-gray-600",
+                        isHovered ? "bg-[#f3f6dc] dark:bg-[#222910]" : "",
                       ]
                         .filter(Boolean)
                         .join(" ")}
@@ -730,11 +732,13 @@ const AgentSummaryTable = ({ selectedDate }: SummaryProps) => {
                 );
               })}
             {grandTotalStats && (
-              <tr className="font-bold border-t border-gray-600 bg-[#181b10]">
+              <tr className="font-bold border-t border-gray-300 dark:border-gray-600 bg-[#edf1d3] dark:bg-[#181b10]">
                 <td className="px-4 py-2" colSpan={4}>
                   GRAND TOTAL OVERALL
                 </td>
-                <td className="px-4 py-2">{fmt(grandTotalStats.overallTotal)}</td>
+                <td className="px-4 py-2">
+                  {fmt(grandTotalStats.overallTotal)}
+                </td>
                 <td className="px-4 py-2">
                   {pct(loggedInUserRemittancePercent)}
                 </td>

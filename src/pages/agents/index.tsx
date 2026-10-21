@@ -265,10 +265,10 @@ const AgentsPage: React.FC = () => {
                 </IconTableActionButton>
 
                 <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                  <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                  <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                     View
                   </span>
-                  <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                  <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
                 </div>
               </div>
               {item.node.email !== SUPER_ADMIN_EMAIL && (
@@ -282,10 +282,10 @@ const AgentsPage: React.FC = () => {
                     </IconTableActionButton>
 
                     <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                      <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                      <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                         Edit
                       </span>
-                      <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                      <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
                     </div>
                   </div>
                   <div className="relative flex flex-col items-center group">
@@ -296,10 +296,10 @@ const AgentsPage: React.FC = () => {
                       <Trash2 className="w-5 h-5" />
                     </IconTableActionButton>
                     <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                      <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                      <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                         Delete
                       </span>
-                      <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                      <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
                     </div>
                   </div>
                 </>

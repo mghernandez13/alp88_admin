@@ -5,13 +5,16 @@ import { AuthContextProvider } from "./components/context/AuthContext";
 import ApolloWrapper from "./graphql/client.tsx";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes.tsx";
+import { ThemeProvider } from "./components/context/ThemeContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthContextProvider>
-      <ApolloWrapper>
-        <RouterProvider router={router} />
-      </ApolloWrapper>
-    </AuthContextProvider>
+    <ThemeProvider>
+      <AuthContextProvider>
+        <ApolloWrapper>
+          <RouterProvider router={router} />
+        </ApolloWrapper>
+      </AuthContextProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

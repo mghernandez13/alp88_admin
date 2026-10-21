@@ -302,9 +302,10 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
       const escapedSearch = trimmedSearch
         .replace(/[%_]/g, "\\$&")
         .replace(/[(),]/g, "");
-      const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        trimmedSearch,
-      );
+      const looksLikeUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          trimmedSearch,
+        );
 
       const searchFilter = looksLikeUuid
         ? `id.eq.${trimmedSearch},combination.ilike.%${escapedSearch}%,bettor_name.ilike.%${escapedSearch}%`
@@ -420,9 +421,11 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
   }, [logsData]);
 
   return (
-    <div className="bg-black rounded-lg p-6">
+    <div className="bg-white dark:bg-black rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <div className="font-semibold text-lg text-white">Winning Bets</div>
+        <div className="font-semibold text-lg text-gray-900 dark:text-white">
+          Winning Bets
+        </div>
         <div className="w-[350px]">
           <Input
             placeholder="Search"
@@ -432,8 +435,8 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-left text-gray-400">
-          <thead className="text-xs uppercase bg-[#222222] text-gray-400">
+        <table className="min-w-full text-sm text-left text-gray-600 dark:text-gray-400">
+          <thead className="text-xs uppercase bg-gray-100 dark:bg-[#222222] text-gray-600 dark:text-gray-400">
             <tr>
               {columns.map((col) => (
                 <th key={col.field} className="px-4 py-2 font-semibold">
@@ -465,7 +468,7 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
               winningBets.map((bet, idx: number) => (
                 <tr
                   key={bet.id || idx}
-                  className="border-b border-gray-700 cursor-pointer hover:bg-[#222910]"
+                  className="border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-[#f3f6dc] dark:hover:bg-[#222910]"
                   onClick={() => {
                     setSelectedBet(bet);
                     setViewModalOpen(true);
@@ -474,13 +477,13 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
                   <td className="px-4 py-3 align-top">
                     <div>
                       <div>Added By: {bet.agentLabel}</div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         On: {bet.createdAtLabel}
                       </div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         RefID: {bet.refIdLabel}
                       </div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         DummyBet: {bet.dummyBetLabel}
                       </div>
                     </div>
@@ -517,10 +520,10 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
                         <Eye className="w-5 h-5" />
                       </IconTableActionButton>
                       <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                        <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                        <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                           View
                         </span>
-                        <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                        <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
                       </div>
                     </div>
                     {bet.is_dummy_bet && (
@@ -532,10 +535,10 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
                           <Trash2 className="w-5 h-5" />
                         </IconTableActionButton>
                         <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center">
-                          <span className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-gray-900 shadow-lg rounded-md">
+                          <span className="relative z-10 p-2 text-xs leading-none text-gray-900 dark:text-white whitespace-no-wrap bg-gray-100 dark:bg-gray-900 shadow-lg rounded-md">
                             Delete
                           </span>
-                          <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-900"></div>
+                          <div className="w-3 h-3 -mt-2 rotate-45 bg-gray-100 dark:bg-gray-900"></div>
                         </div>
                       </div>
                     )}
@@ -550,17 +553,17 @@ const WinningBetsTable: React.FC<WinningBetsTableProps> = ({
       {totalPages > 1 && (
         <div className="flex justify-end items-center gap-2 mt-4">
           <button
-            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
           >
             Previous
           </button>
-          <span className="text-gray-300">
+          <span className="text-gray-700 dark:text-gray-300">
             Page {page} of {totalPages}
           </span>
           <button
-            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            className="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
           >

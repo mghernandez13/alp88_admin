@@ -2,7 +2,7 @@ import React from "react";
 
 const LoadingScreen: React.FC = () => {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-black backdrop-blur-sm">
       {/* Container for the Spinner */}
       <div className="relative flex items-center justify-center">
         {/* Outer Glowing Ring */}

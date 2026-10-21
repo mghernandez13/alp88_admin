@@ -87,7 +87,7 @@ const BetPrizeForm: React.FC<BetPrizeFormProps> = ({
   return (
     <form
       onSubmit={onSubmit}
-      className="bg-black p-8 rounded-lg border border-gray-700 shadow-2xl"
+      className="bg-white dark:bg-black p-8 rounded-lg border border-gray-200 dark:border-gray-700 shadow-2xl"
     >
       <div className="flex flex-col gap-6">
         <div className="flex w-full gap-4">
@@ -206,9 +206,9 @@ const BetPrizeForm: React.FC<BetPrizeFormProps> = ({
               name="super_jackpot"
               checked={!!formData.super_jackpot}
               onChange={onChange}
-              className="w-5 h-5 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+              className="w-5 h-5 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
             />
-            <label className="text-gray-300 font-medium cursor-pointer">
+            <label className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer">
               Enable Super Jackpot
             </label>
           </div>
@@ -245,9 +245,9 @@ const BetPrizeForm: React.FC<BetPrizeFormProps> = ({
             name="isActive"
             checked={formData.isActive}
             onChange={onChange}
-            className="w-5 h-5 accent-yellow-500 bg-[#16191d] border-gray-600 rounded cursor-pointer"
+            className="w-5 h-5 accent-yellow-500 bg-white dark:bg-[#16191d] border-gray-300 dark:border-gray-600 rounded cursor-pointer"
           />
-          <label className="text-gray-300 font-medium cursor-pointer">
+          <label className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer">
             Active
           </label>
         </div>
